@@ -1,0 +1,36 @@
+{
+  "manifest_version": 3,
+  "name": "MyShows Comment Summarizer",
+  "version": "1.0",
+  "description": "Adds a comment summarizer button to myshows.me pages using OpenAI's models",
+  "permissions": ["storage", "activeTab"],
+  "host_permissions": ["*://*.myshows.me/*"],
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": false
+  },
+  "action": {
+    "default_title": "MyShows Comment Summarizer",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "192": "icons/192.png"
+    }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["content.css"],
+      "matches": ["*://*.myshows.me/*"]
+    }
+  ],
+  "icons": {
+    "192": "icons/192.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://*.myshows.me/*"],
+      "js": ["jquery-2.1.4.min.js", "prompts.js", "content.js"],
+      "css": ["content.css"],
+      "run_at": "document_end"
+    }
+  ]
+}

@@ -1,0 +1,88 @@
+/* Button styling to match site's look and feel */
+.summarize-button {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    color: #3ec1ff; /* Default to #3ec1ff in case var() isn't supported */
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 16px;
+    justify-content: center;
+    line-height: 24px;
+    padding: 0;
+    text-align: left;
+    -webkit-font-smoothing: antialiased;
+    margin: 10px 0;
+}
+
+/* Container for the button and summary */
+#comment-summarizer-container {
+    padding-left: 20px; /* Add left padding to match other elements */
+    margin-bottom: 15px;
+}
+
+.summarize-button:hover {
+    text-decoration: underline;
+}
+
+.summarize-button:disabled {
+    opacity: 0.7;
+    cursor: default;
+}
+
+.summarize-button:disabled:hover {
+    text-decoration: none;
+}
+
+/* Loading spinner */
+.loading-spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(62, 193, 255, 0.2);
+    border-radius: 50%;
+    border-top-color: #3ec1ff;
+    animation: spin 1s ease-in-out infinite;
+    margin-right: 8px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Summary container */
+.comment-summary-container {
+    background-color: #474747;
+    border-radius: 8px;
+    padding: 15px;
+    margin: 0 20px 20px 20px; /* Add left and right margin */
+    color: #e8e8e8;
+}
+
+.comment-summary-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.comment-summary-title {
+    font-size: 16px;
+    font-weight: bold;
+    margin: 0;
+}
+
+.comment-summary-count {
+    color: #ccc;
+    font-size: 14px;
+}
+
+.comment-summary-content {
+    line-height: 1.5;
+    white-space: pre-line;
+}
+
+.hidden {
+    display: none !important;
+}
