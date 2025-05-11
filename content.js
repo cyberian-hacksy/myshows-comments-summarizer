@@ -84,6 +84,20 @@ function checkDomStability() {
     }
 }
 
+// Check if comments are loaded
+function areCommentsLoaded() {
+    // Check if there are any comments on the page
+    const commentElements = document.querySelectorAll('.Comment__text');
+    return commentElements.length > 0;
+}
+
+// Check if "Show Comments" button exists
+function hasShowCommentsButton() {
+    // Find the "Show Comments" button
+    const showButton = document.querySelector('.Episode-commentsShow');
+    return !!showButton;
+}
+
 // Function that actually adds our button
 function tryAddButton() {
     if (buttonAdded) {
@@ -91,12 +105,26 @@ function tryAddButton() {
         return;
     }
 
+    // Check if comments section exists
     const commentsSection = document.getElementById('comments');
-
     if (!commentsSection) {
         console.log("Comments section not found, will try again later");
         // Schedule another attempt
         setTimeout(tryAddButton, 1000);
+        return;
+    }
+
+    // Check if comments are already loaded
+    const commentsLoaded = areCommentsLoaded();
+    const hasShowButton = hasShowCommentsButton();
+
+    // If comments aren't loaded and there's a "Show Comments" button,
+    // we'll observe for when it's clicked instead of showing our button immediately
+    if (!commentsLoaded && hasShowButton) {
+        console.log("Comments not loaded yet, waiting for 'Show Comments' button to be clicked");
+
+        // Set up an observer to watch for when comments are loaded
+        setupCommentsLoadObserver();
         return;
     }
 
@@ -128,7 +156,7 @@ function tryAddButton() {
                     -webkit-font-smoothing: auto;
                     margin: 10px 0;
                 ">
-                    <span style="margin-right: 6px;">
+                    <span style="margin-right: 6px; display: inline-flex;">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16zm0-13a1 1 0 0 0-1 1v5a1 1 0 0 0 2 0V8a1 1 0 0 0-1-1zm0 10a1 1 0 1 0 0-2 1 1 0 0 0 0 2z" fill="currentColor"/>
                         </svg>
@@ -164,6 +192,14 @@ function tryAddButton() {
                     -webkit-font-smoothing: auto;
                     margin: 10px 0;
                 ">
+                    <span id="button-icon" style="
+                        margin-right: 6px;
+                        display: inline-flex;
+                    ">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M4 5h16v2H4V5zm0 6h16v2H4v-2zm0 6h16v2H4v-2z" fill="currentColor"/>
+                        </svg>
+                    </span>
                     <span id="loading-spinner" style="
                         display: none;
                         width: 16px;
@@ -174,12 +210,7 @@ function tryAddButton() {
                         animation: spin 1s ease-in-out infinite;
                         margin-right: 8px;
                     "></span>
-                    <span style="margin-right: 6px;">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M4 5h16v2H4V5zm0 6h16v2H4v-2zm0 6h16v2H4v-2z" fill="currentColor"/>
-                        </svg>
-                    </span>
-                    Summarize Comments
+                    <span id="button-text">Summarize Comments</span>
                 </button>
                 <div id="summary-container" style="
                     display: none;
@@ -221,6 +252,65 @@ function tryAddButton() {
     });
 }
 
+// Set up observer to wait for comments to be loaded
+function setupCommentsLoadObserver() {
+    console.log("Setting up observer for comment loading");
+
+    // Find the "Show Comments" button
+    const showButton = document.querySelector('.Episode-commentsShow');
+
+    if (showButton) {
+        // Add click listener to detect when the button is clicked
+        showButton.addEventListener('click', function() {
+            console.log("'Show Comments' button clicked, waiting for comments to load");
+
+            // Set up an observer to watch for when comments appear
+            const commentsObserver = new MutationObserver(function(mutations) {
+                if (areCommentsLoaded()) {
+                    console.log("Comments have been loaded");
+                    commentsObserver.disconnect();
+
+                    // Wait a bit for the comments to fully render
+                    setTimeout(function() {
+                        buttonAdded = false;
+                        tryAddButton();
+                    }, 1000);
+                }
+            });
+
+            commentsObserver.observe(document.documentElement, {
+                childList: true,
+                subtree: true
+            });
+
+            // Set a timeout to stop watching if comments never load
+            setTimeout(function() {
+                commentsObserver.disconnect();
+            }, 10000);
+        });
+
+        console.log("Added listener to 'Show Comments' button");
+    } else {
+        console.log("Could not find 'Show Comments' button");
+
+        // If we can't find the show button but still have a comments section,
+        // let's periodically check if comments get loaded
+        const checkInterval = setInterval(function() {
+            if (areCommentsLoaded()) {
+                console.log("Comments have been loaded");
+                clearInterval(checkInterval);
+                buttonAdded = false;
+                tryAddButton();
+            }
+        }, 1000);
+
+        // Stop checking after 30 seconds
+        setTimeout(function() {
+            clearInterval(checkInterval);
+        }, 30000);
+    }
+}
+
 // Check if our button still exists and re-add if needed
 function checkButtonExists() {
     if (!buttonAdded) return;
@@ -241,23 +331,25 @@ function handleSummarizeClick() {
 
     // Get elements
     const button = document.getElementById('summarize-button');
+    const buttonIcon = document.getElementById('button-icon');
+    const buttonText = document.getElementById('button-text');
     const spinner = document.getElementById('loading-spinner');
     const summaryContainer = document.getElementById('summary-container');
     const summaryContent = document.getElementById('summary-content');
     const commentCount = document.getElementById('comment-count');
 
-    if (!button || !spinner || !summaryContainer || !summaryContent) {
+    if (!button || !spinner || !summaryContainer || !summaryContent || !buttonIcon || !buttonText) {
         console.error("Required elements not found");
         return;
     }
 
     // Show loading state
-    const originalButtonText = button.textContent.trim();
     spinner.style.display = 'inline-block';
-    button.textContent = '';
-    button.appendChild(spinner);
-    button.appendChild(document.createTextNode(' Summarizing...'));
+    buttonText.textContent = 'Summarizing...';
     button.disabled = true;
+
+    // Make sure icon stays visible
+    buttonIcon.style.display = 'inline-flex';
 
     // Extract comments
     const comments = extractComments();
@@ -265,7 +357,7 @@ function handleSummarizeClick() {
     if (comments.length === 0) {
         // Handle no comments case
         spinner.style.display = 'none';
-        button.textContent = originalButtonText;
+        buttonText.textContent = 'Summarize Comments';
         button.disabled = false;
         alert('No comments found on this page.');
         return;
@@ -285,7 +377,7 @@ function handleSummarizeClick() {
 
         // Reset button
         spinner.style.display = 'none';
-        button.textContent = originalButtonText;
+        buttonText.textContent = 'Summarize Comments';
         button.disabled = false;
     }).catch(error => {
         console.error('Error generating summary:', error);
@@ -306,7 +398,7 @@ function handleSummarizeClick() {
 
         // Reset button
         spinner.style.display = 'none';
-        button.textContent = originalButtonText;
+        buttonText.textContent = 'Summarize Comments';
         button.disabled = false;
     });
 }
