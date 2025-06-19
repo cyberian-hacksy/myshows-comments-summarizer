@@ -5,7 +5,7 @@
   "description": "Adds a comment summarizer button to myshows.me pages using OpenAI's models",
   "permissions": ["storage"],
   "options_ui": {
-    "page": "options.html",
+    "page": "popup.html",
     "open_in_tab": false
   },
   "action": {

@@ -25,7 +25,7 @@ function updateTemperatureValue() {
 }
 
 // Save options to chrome.storage
-function saveOptions() {
+function saveOptions(successMessage = 'Settings saved.') {
     const apiKey = document.getElementById('openai-api-key').value;
     const model = document.getElementById('model-selection').value;
     const language = document.getElementById('language-selection').value;
@@ -43,7 +43,7 @@ function saveOptions() {
         function() {
             // Update status to let user know options were saved
             const status = document.getElementById('status');
-            status.textContent = 'Settings saved.';
+            status.textContent = successMessage;
             status.className = 'status success';
             setTimeout(function() {
                 status.textContent = '';
@@ -77,6 +77,6 @@ function restoreOptions() {
 
 // Event listeners
 document.addEventListener('DOMContentLoaded', restoreOptions);
-document.getElementById('save-button').addEventListener('click', saveOptions);
+document.getElementById('save-button').addEventListener('click', () => saveOptions('Settings saved.'));
 document.getElementById('model-selection').addEventListener('change', updateModelDescription);
 document.getElementById('temperature-slider').addEventListener('input', updateTemperatureValue);
