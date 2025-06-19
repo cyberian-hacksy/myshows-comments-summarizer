@@ -23,7 +23,19 @@
   "content_scripts": [
     {
       "matches": ["*://*.myshows.me/*"],
-      "js": ["jquery-2.1.4.min.js", "prompts.js", "content.js"],
+      "js": [
+        "jquery-2.1.4.min.js", 
+        "prompts.js", 
+        "config.js", 
+        "dom-utils.js", 
+        "prompt-selector.js", 
+        "comments-observer.js", 
+        "button-manager.js", 
+        "summarizer.js", 
+        "url-handler.js", 
+        "ui.js", 
+        "content.js"
+      ],
       "run_at": "document_end"
     }
   ]
