@@ -45,6 +45,78 @@
             box-sizing: border-box;
         }
 
+        .custom-dropdown {
+            position: relative;
+            width: 100%;
+        }
+
+        .dropdown-selected {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            background-color: white;
+            box-sizing: border-box;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .dropdown-selected:after {
+            content: '';
+            width: 0;
+            height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 5px solid #666;
+            margin-left: 10px;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            max-height: 300px;
+            overflow-y: auto;
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            z-index: 10;
+            display: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .dropdown-search {
+            width: 100%;
+            padding: 8px;
+            border: none;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        .dropdown-options {
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        .dropdown-option {
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .dropdown-option:hover {
+            background-color: #f5f5f5;
+        }
+
+        .dropdown-option.selected {
+            background-color: #e6f7ff;
+        }
+
         input[type="range"] {
             width: 100%;
             margin: 8px 0;
@@ -146,16 +218,16 @@
 </div>
 
 <div class="form-group">
-    <label for="language-selection">Summary Language:</label>
-    <select id="language-selection">
-        <option value="english">English</option>
-        <option value="russian">Russian</option>
-        <option value="spanish">Spanish</option>
-        <option value="french">French</option>
-        <option value="german">German</option>
-        <option value="japanese">Japanese</option>
-        <option value="chinese">Chinese</option>
-    </select>
+    <label for="language-dropdown">Summary Language:</label>
+    <div class="custom-dropdown" id="language-dropdown">
+        <div class="dropdown-selected" id="selected-language">Select a language</div>
+        <div class="dropdown-menu" id="dropdown-menu">
+            <input type="text" class="dropdown-search" id="language-search" placeholder="Search languages...">
+            <div class="dropdown-options" id="language-options">
+                <!-- Will be populated from languages.json -->
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="form-group">
