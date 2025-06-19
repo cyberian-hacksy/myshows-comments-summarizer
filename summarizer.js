@@ -3,7 +3,7 @@
 (function() {
     // Make summarizer functions available globally
     window.MyShowsSummarizer = window.MyShowsSummarizer || {};
-    
+
     // Handle summarize button click
     MyShowsSummarizer.handleSummarizeClick = function() {
         console.debug("Summarize button clicked with prompt type:", MyShowsConfig.selectedPromptType);
@@ -183,8 +183,7 @@ Rating: ${c.rating}`;
                                 {role: 'system', content: systemMessage},
                                 {role: 'user', content: userMessage}
                             ],
-                            temperature: temperature,
-                            max_tokens: maxTokens
+                            ...(model === 'o4-mini' ? { max_completion_tokens: maxTokens } : { temperature: temperature, max_tokens: maxTokens })
                         })
                     })
                         .then(response => {
@@ -211,6 +210,6 @@ Rating: ${c.rating}`;
             );
         });
     };
-    
+
     console.debug("MyShows Comment Summarizer summarizer loaded");
 })();
