@@ -1,9 +1,10 @@
 // Model descriptions
 const modelDescriptions = {
     'gpt-4o': 'Fast, intelligent, flexible GPT model',
-    'gpt-4.1': 'Flagship GPT model for complex tasks',
+    'gpt-4.1': 'Smartest model for complex tasks',
     'gpt-4o-mini': 'Fast, affordable small model for focused tasks',
-    'gpt-4.1-mini': 'Balanced for intelligence, speed, and cost',
+    'gpt-4.1-mini': 'Affordable model balancing speed and intelligence',
+    'gpt-4.1-nano': 'Fastest, most cost-effective model for low-latency tasks',
     'o4-mini': 'Faster, more affordable reasoning model'
 };
 
