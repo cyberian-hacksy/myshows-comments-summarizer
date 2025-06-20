@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "MyShows Comment Summarizer",
-  "version": "1.1",
+  "version": "1.2",
   "description": "Adds a comment summarizer button to myshows.me pages using OpenAI's models",
   "permissions": ["storage"],
   "options_ui": {
