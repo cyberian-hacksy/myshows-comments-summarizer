@@ -1,0 +1,20 @@
+{
+  "name": "myshows-comments-summarizer",
+  "version": "1.0.0",
+  "description": "A Chrome extension that adds a button to myshows.me pages to summarize user comments using OpenAI's AI models.",
+  "main": "button-manager.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "jest": "^30.0.5",
+    "jsdom": "^26.1.0"
+  },
+  "jest": {
+    "testEnvironment": "node"
+  }
+}
