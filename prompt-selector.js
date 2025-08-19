@@ -3,7 +3,10 @@
 (function() {
     // Make prompt selector functions available globally
     window.MyShowsPromptSelector = window.MyShowsPromptSelector || {};
-    
+
+    // Keep track of the document click handler so we don't attach duplicates
+    let documentClickHandler = null;
+
     // Set up the prompt selector dropdown
     MyShowsPromptSelector.setupPromptSelector = function() {
         const selectorButton = document.getElementById('prompt-selector-button');
@@ -115,12 +118,19 @@
             }
         });
 
-        // Close dropdown when clicking outside
-        document.addEventListener('click', function (e) {
+        // Close dropdown when clicking outside. Remove previous handler if any to
+        // avoid stacking multiple listeners when the UI is re-rendered.
+        if (documentClickHandler) {
+            document.removeEventListener('click', documentClickHandler);
+        }
+
+        documentClickHandler = function (e) {
             if (!dropdown.contains(e.target) && !selectorButton.contains(e.target)) {
                 dropdown.style.display = 'none';
             }
-        });
+        };
+
+        document.addEventListener('click', documentClickHandler);
     };
     
     console.debug("MyShows Comment Summarizer prompt selector loaded");
