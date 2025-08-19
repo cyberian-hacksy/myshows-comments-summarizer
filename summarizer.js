@@ -151,8 +151,8 @@
                     // Prepare the comments for summarization
                     const commentTexts = comments.map((c, index) => {
                         // Truncate long comments to avoid exceeding token limits
-                        return `Comment ${index + 1}: ${c.text.substring(0, 300)} ${c.text.length > 300 ? '...' : ''}
-Rating: ${c.rating}`;
+                        const truncatedText = c.text.substring(0, 300) + (c.text.length > 300 ? '...' : '');
+                        return `Comment ${index + 1}: ${truncatedText}\nRating: ${c.rating}`;
                     }).join('\n\n');
 
                     // Get system prompt
