@@ -56,7 +56,7 @@ You can customize the extension by clicking its icon in the toolbar:
 - **o4-mini**: Faster, more affordable reasoning model
 
 ### Summary Language
-Supports dozens of languages including English, Russian, Spanish, French, German, Japanese, and Chinese. For the complete list, see [languages.json](https://github.com/cyberian-hacksy/myshows-comment-summarizer-extension/blob/main/languages.json).
+Supports dozens of languages including English, Russian, Spanish, French, German, Japanese, and Chinese. For the complete list, see [languages.json](https://github.com/cyberian-hacksy/myshows-comments-summarizer/blob/main/languages.json).
 
 ### Temperature
 Controls creativity vs. predictability (0.0-1.0):
