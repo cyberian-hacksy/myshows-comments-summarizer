@@ -56,7 +56,7 @@ You can customize the extension by clicking its icon in the toolbar:
 - **o4-mini**: Faster, more affordable reasoning model
 
 ### Summary Language
-Choose from: English, Russian, Spanish, French, German, Japanese, or Chinese
+Supports dozens of languages including English, Russian, Spanish, French, German, Japanese, Chinese, and more (see `languages.json` for the full list)
 
 ### Temperature
 Controls creativity vs. predictability (0.0-1.0):
