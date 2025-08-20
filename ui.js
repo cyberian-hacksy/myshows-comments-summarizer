@@ -6,6 +6,11 @@
     
     // Function that actually adds our button
     MyShowsUI.tryAddButton = function() {
+        if (MyShowsConfig.buttonAdded || MyShowsConfig.isAddingButton) {
+            console.debug("Button already added or in progress, skipping");
+            return;
+        }
+
         // Clean up any existing elements first
         MyShowsDOMUtils.cleanupExistingElements();
 
@@ -33,6 +38,8 @@
         }
 
         console.debug("Found comments section, adding button...");
+
+        MyShowsConfig.isAddingButton = true;
 
         // Get API key and proceed
         chrome.storage.sync.get({openaiApiKey: ''}, function (items) {
@@ -194,10 +201,14 @@
             }
 
             MyShowsConfig.buttonAdded = true;
+            MyShowsConfig.isAddingButton = false;
             console.debug("Button successfully added to page");
 
             // Set up a periodic check to make sure our button stays there
-            setInterval(MyShowsButtonManager.checkButtonExists, 2000);
+            if (MyShowsConfig.buttonCheckInterval) {
+                clearInterval(MyShowsConfig.buttonCheckInterval);
+            }
+            MyShowsConfig.buttonCheckInterval = setInterval(MyShowsButtonManager.checkButtonExists, 2000);
         });
     };
 

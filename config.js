@@ -16,6 +16,8 @@
     
     // ---- State tracking ----
     MyShowsConfig.buttonAdded = false;
+    MyShowsConfig.isAddingButton = false;
+    MyShowsConfig.buttonCheckInterval = null;
     MyShowsConfig.stabilityObserver = null;
     MyShowsConfig.lastDomChangeTime = 0;
     MyShowsConfig.stabilityTimer = null;
