@@ -53,6 +53,9 @@ You can customize the extension by clicking its icon in the toolbar:
 - **GPT-4.1**: Flagship GPT model for complex tasks
 - **GPT-4o mini**: Fast, affordable small model for focused tasks
 - **GPT-4.1 mini**: Balanced for intelligence, speed, and cost
+- **GPT-5**: Most advanced model for complex tasks
+- **GPT-5 mini**: Compact GPT-5 model for fast, affordable tasks
+- **GPT-5 nano**: Smallest GPT-5 model for ultra-low latency tasks
 - **o4-mini**: Faster, more affordable reasoning model
 
 ### Summary Language

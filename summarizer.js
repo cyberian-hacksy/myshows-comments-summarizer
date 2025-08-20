@@ -183,7 +183,13 @@
                                 {role: 'system', content: systemMessage},
                                 {role: 'user', content: userMessage}
                             ],
-                            ...(model === 'o4-mini' ? { max_completion_tokens: maxTokens } : { temperature: temperature, max_tokens: maxTokens })
+                            ...(
+                                model === 'o4-mini'
+                                    ? { max_completion_tokens: maxTokens }
+                                    : model.startsWith('gpt-5')
+                                        ? { temperature: temperature, max_completion_tokens: maxTokens }
+                                        : { temperature: temperature, max_tokens: maxTokens }
+                            )
                         })
                     })
                         .then(response => {
