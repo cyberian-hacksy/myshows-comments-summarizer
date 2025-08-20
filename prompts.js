@@ -37,7 +37,9 @@ MyShowsPrompts.userPrompts = {
 2. The main themes or topics discussed
 3. Any consensus on the episode quality
 4. Any interesting points or contradictions in the comments
-5. The general comments trend`;
+5. The general comments trend
+
+Never recommend to continue the dialogue or ask for more information.`;
 
         return buildPromptTemplate(specificInstructions, comments, language);
     },
