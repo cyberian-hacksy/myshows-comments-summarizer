@@ -1,7 +1,9 @@
 import type { Comment, PromptDefinition, PromptOverride } from './types'
 
 export const DEFAULT_SYSTEM_PROMPT =
-  'You are an AI assistant that specializes in analyzing user comments from a TV show website.'
+  'You are an AI assistant that specializes in analyzing user comments from a TV show website. ' +
+  'Be concise: state each piece of information exactly once and never repeat a point in different words across sections. ' +
+  'Never ask follow-up questions or offer to continue the conversation.'
 
 const SHARED_SUFFIX = `
 
@@ -21,14 +23,12 @@ export const BUILTIN_PROMPTS: PromptDefinition[] = [
     id: 'default',
     name: 'Summarize Comments',
     builtin: true,
-    template: `Please analyze these comments and provide a summary that covers:
-1. The overall sentiment (positive, negative, or mixed)
-2. The main themes or topics discussed
-3. Any consensus on the episode quality
-4. Any interesting points or contradictions in the comments
-5. The general comments trend
+    template: `Please summarize these comments, covering:
+1. Overall reception: the general sentiment and whether viewers considered the episode good, bad, or divisive
+2. Main topics: what viewers discussed most (plot points, characters, theories), with the gist of what was said about each
+3. Disagreements and standout remarks: points where commenters contradicted each other, plus any unique insights or particularly funny comments
 
-Never recommend to continue the dialogue or ask for more information.${SHARED_SUFFIX}`,
+Each section must only contain information not already covered by another section. If a section has nothing new to add, omit it.${SHARED_SUFFIX}`,
   },
   {
     id: 'topComments',
@@ -46,11 +46,12 @@ Never recommend to continue the dialogue or ask for more information.${SHARED_SU
     name: 'Critic Analysis',
     builtin: true,
     template: `Please analyze these comments as a professional critic would and provide:
-1. A thoughtful analysis of the episode based on viewer comments
-2. Comparison to critical consensus (if apparent from comments)
-3. Analysis of the episode's strengths and weaknesses mentioned
-4. Context about how this episode fits into the show's narrative (if mentioned)
-5. A final verdict summarizing the viewer reception${SHARED_SUFFIX}`,
+1. The episode's strengths and weaknesses as reported by viewers
+2. How this episode fits into the show's narrative (only if comments mention it)
+3. Comparison to critical consensus (only if apparent from comments)
+4. A short final verdict on the overall viewer reception
+
+Do not repeat the same observation in more than one section.${SHARED_SUFFIX}`,
   },
   {
     id: 'episodeRating',
@@ -61,7 +62,7 @@ Never recommend to continue the dialogue or ask for more information.${SHARED_SU
 2. The distribution of ratings (how many high vs. low scores)
 3. Key reasons for high ratings
 4. Key reasons for low ratings
-5. A final verdict on whether the episode was generally well-received${SHARED_SUFFIX}`,
+5. A one-sentence final verdict on whether the episode was generally well-received${SHARED_SUFFIX}`,
   },
 ]
 
