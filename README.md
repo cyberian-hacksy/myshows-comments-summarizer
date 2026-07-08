@@ -5,7 +5,9 @@ A Chrome extension that adds a button to myshows.me pages to summarize user comm
 ## Features
 
 - Extracts all comments from myshows.me episode pages
-- Summarizes comments using OpenAI's advanced AI models
+- Summarizes comments using OpenAI's models via the Responses API
+- Model list fetched live from your OpenAI account (with offline fallback)
+- Customizable prompts: edit the built-in prompts or create your own
 - Supports multiple languages for summaries
 - Customizable AI parameters (model, temperature, output length)
 - Preserves comment ratings in the analysis
@@ -16,10 +18,21 @@ A Chrome extension that adds a button to myshows.me pages to summarize user comm
 ### From Source (Development)
 
 1. Clone this repository or download the source code
-2. Open Chrome and navigate to `chrome://extensions/`
-3. Enable "Developer mode" using the toggle in the top-right corner
-4. Click "Load unpacked" and select the extension directory
-5. The extension icon should appear in your browser toolbar
+2. Install dependencies and build the extension:
+   ```bash
+   npm install
+   npm run build
+   ```
+3. Open Chrome and navigate to `chrome://extensions/`
+4. Enable "Developer mode" using the toggle in the top-right corner
+5. Click "Load unpacked" and select the `dist` directory
+6. The extension icon should appear in your browser toolbar
+
+### Development
+
+- `npm run dev` — Vite dev server with hot reload (CRXJS)
+- `npm test` — run the Vitest test suite
+- `npm run build` — type-check and produce a production build in `dist/`
 
 ## Setup
 
@@ -36,27 +49,27 @@ If you don't have an OpenAI API key, you can get one from the [OpenAI Platform](
 
 1. Navigate to any episode page on myshows.me
 2. Look for the "Summarize Comments" button above the comments section
-3. Click the button to generate an AI summary of all comments
-4. The summary will appear above the comments section, showing:
-    - Overall sentiment
-    - Main themes discussed
-    - Consensus on episode quality
-    - Notable points or contradictions
-    - General rating trends
+3. Click the button to generate an AI summary of all comments, or use the
+   arrow next to it to pick a different prompt (built-in or your own)
+4. The summary will appear above the comments section
 
 ## Settings
 
-You can customize the extension by clicking its icon in the toolbar:
-
 ### AI Model
-- **GPT-4o**: Fast, intelligent, flexible GPT model
-- **GPT-4.1**: Flagship GPT model for complex tasks
-- **GPT-4o mini**: Fast, affordable small model for focused tasks
-- **GPT-4.1 mini**: Balanced for intelligence, speed, and cost
-- **GPT-5**: Most advanced model for complex tasks
-- **GPT-5 mini**: Compact GPT-5 model for fast, affordable tasks
-- **GPT-5 nano**: Smallest GPT-5 model for ultra-low latency tasks
-- **o4-mini**: Faster, more affordable reasoning model
+The model dropdown is populated from your OpenAI account via the
+[`/v1/models`](https://platform.openai.com/docs/api-reference/models) endpoint,
+filtered to text-generation models, and cached for 24 hours (use the ↻ button
+to refresh). Without a key, a built-in default list is shown.
+
+### Prompts
+Click "Manage prompts…" in the popup to open the prompt library:
+
+- **Built-in prompts** (Summarize Comments, Top Comments, Critic Analysis,
+  Episode Rating) can be edited and reset back to their defaults, but not deleted.
+- **Custom prompts** can be created, edited, and deleted freely.
+- Templates support three placeholders: `{count}` (number of comments),
+  `{comments}` (the comments with their ratings), and `{language}` (the summary language).
+- The **system prompt** that frames every request is also editable and resettable.
 
 ### Summary Language
 Supports dozens of languages including English, Russian, Spanish, French, German, Japanese, and Chinese. For the complete list, see [languages.json](https://github.com/cyberian-hacksy/myshows-comments-summarizer/blob/main/languages.json).
@@ -66,23 +79,30 @@ Controls creativity vs. predictability (0.0-1.0):
 - Lower values (closer to 0): More consistent, predictable outputs
 - Higher values (closer to 1): More creative, diverse outputs
 
+Reasoning models (gpt-5 family, o-series) ignore this setting.
+
 ### Max Output Length
 - **Short**: About 150 words
 - **Medium**: About 250 words
 - **Long**: About 400 words
 - **Very Long**: About 600 words
 
+For reasoning models the raw token budget is tripled internally, since these
+models also spend output tokens on thinking.
+
 ## Technical Details
 
 This extension uses:
 - Chrome Extension Manifest V3
-- OpenAI Chat Completions API
-- jQuery for DOM manipulation
+- TypeScript, built with Vite and [CRXJS](https://crxjs.dev/vite-plugin)
+- OpenAI Responses API (single code path for all models)
 - Chrome Storage API for saving settings
+- Vitest for unit tests
 
 ## Privacy
 
-- Your OpenAI API key is stored locally in Chrome's secure storage
+- Your OpenAI API key is stored in `chrome.storage.local` — it stays on the
+  device and is never synced through your Google account
 - The extension only accesses myshows.me pages
 - Comment data is sent to OpenAI for processing via your own API key
 - No data is stored or shared beyond what is necessary for summarization
@@ -95,6 +115,7 @@ If you encounter issues:
 2. **API errors**: Verify your API key is correct and has sufficient credits
 3. **Extension not working**: Try refreshing the page or reloading the extension
 4. **Summary cuts off**: Try increasing the "Max Output Length" in settings
+5. **Model missing from the list**: Click the ↻ refresh button next to the model dropdown
 
 ## Credits
 

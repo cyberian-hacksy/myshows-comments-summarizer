@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>MyShows Comment Summarizer — Prompts</title>
+    <link rel="stylesheet" href="./options.css">
+</head>
+<body>
+<h1>Prompt Library</h1>
+<p class="hint">
+    Built-in prompts can be edited and reset to their defaults, but not deleted.
+    Available placeholders: <code>{count}</code> (number of comments),
+    <code>{comments}</code> (the comments themselves), <code>{language}</code> (summary language).
+</p>
+
+<main class="layout">
+    <aside>
+        <ul id="prompt-list"></ul>
+        <button id="new-prompt" type="button">+ New prompt</button>
+    </aside>
+
+    <section id="editor" hidden>
+        <label for="prompt-name">Name</label>
+        <input id="prompt-name" type="text" maxlength="60">
+
+        <label for="prompt-template">Template</label>
+        <textarea id="prompt-template" rows="18" spellcheck="false"></textarea>
+
+        <div class="editor-buttons">
+            <button id="save-prompt" type="button">Save</button>
+            <button id="reset-prompt" type="button" class="secondary" hidden>Reset to default</button>
+            <button id="delete-prompt" type="button" class="danger" hidden>Delete</button>
+        </div>
+        <p id="editor-status" role="status"></p>
+    </section>
+</main>
+
+<section class="system-section">
+    <h2>System prompt</h2>
+    <p class="hint">Sets the assistant's overall behavior for every summary.</p>
+    <textarea id="system-prompt" rows="3" spellcheck="false"></textarea>
+    <div class="editor-buttons">
+        <button id="save-system" type="button">Save</button>
+        <button id="reset-system" type="button" class="secondary">Reset to default</button>
+    </div>
+    <p id="system-status" role="status"></p>
+</section>
+
+<script type="module" src="./options.ts"></script>
+</body>
+</html>

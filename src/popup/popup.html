@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="utf-8">
     <title>MyShows Comment Summarizer</title>
     <style>
         body {
@@ -26,7 +27,19 @@
             font-weight: bold;
         }
 
-        input[type="text"] {
+        .label-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .label-row label {
+            margin-bottom: 0;
+        }
+
+        input[type="text"],
+        input[type="password"] {
             width: 100%;
             padding: 8px;
             border: 1px solid #ccc;
@@ -131,7 +144,7 @@
 
         .buttons {
             display: flex;
-            justify-content: flex-end;
+            justify-content: space-between;
             margin-top: 15px;
         }
 
@@ -147,6 +160,31 @@
 
         button:hover {
             background-color: #3b78e7;
+        }
+
+        button.secondary {
+            background-color: transparent;
+            color: #4285f4;
+            padding: 8px 0;
+        }
+
+        button.secondary:hover {
+            background-color: transparent;
+            text-decoration: underline;
+        }
+
+        #refresh-models {
+            background: transparent;
+            color: #4285f4;
+            border: none;
+            padding: 0 4px;
+            font-size: 16px;
+            line-height: 1;
+            cursor: pointer;
+        }
+
+        #refresh-models:hover {
+            background: transparent;
         }
 
         .status {
@@ -194,30 +232,16 @@
 
 <div class="form-group">
     <label for="openai-api-key">OpenAI API Key:</label>
-    <input type="text" id="openai-api-key" placeholder="sk-...">
+    <input type="password" id="openai-api-key" placeholder="sk-..." autocomplete="off">
 </div>
 
 <div class="form-group">
-    <label for="model-selection">Model:</label>
-    <select id="model-selection">
-        <!-- Full-sized models -->
-        <optgroup label="Full-sized models">
-            <option value="gpt-4o">GPT-4o</option>
-            <option value="gpt-4.1">GPT-4.1</option>
-            <option value="gpt-5">GPT-5</option>
-        </optgroup>
-
-        <!-- Mini models -->
-        <optgroup label="Smaller models (faster & more affordable)">
-            <option value="gpt-4o-mini">GPT-4o mini</option>
-            <option value="gpt-4.1-mini">GPT-4.1 mini</option>
-            <option value="gpt-5-mini">GPT-5 mini</option>
-            <option value="gpt-4.1-nano">GPT-4.1 nano</option>
-            <option value="gpt-5-nano">GPT-5 nano</option>
-            <option value="o4-mini">o4-mini</option>
-        </optgroup>
-    </select>
-    <div id="model-description" class="model-description">Fast, intelligent, flexible GPT model</div>
+    <div class="label-row">
+        <label for="model-selection">Model:</label>
+        <button id="refresh-models" type="button" title="Refresh model list from OpenAI">&#8635;</button>
+    </div>
+    <select id="model-selection"></select>
+    <div id="model-description" class="model-description"></div>
 </div>
 
 <div class="form-group">
@@ -227,7 +251,7 @@
         <div class="dropdown-menu" id="dropdown-menu">
             <input type="text" class="dropdown-search" id="language-search" placeholder="Search languages...">
             <div class="dropdown-options" id="language-options">
-                <!-- Will be populated from languages.json -->
+                <!-- Populated from languages.json -->
             </div>
         </div>
     </div>
@@ -236,7 +260,7 @@
 <div class="form-group">
     <label for="temperature-slider">Temperature: <span id="temperature-value">0.7</span></label>
     <input type="range" id="temperature-slider" min="0" max="1" step="0.1" value="0.7">
-    <div class="setting-description">Higher values make output more creative, lower values make it more predictable.</div>
+    <div class="setting-description">Higher values make output more creative, lower values make it more predictable. Ignored by reasoning models (gpt-5, o-series).</div>
 </div>
 
 <div class="form-group">
@@ -251,7 +275,8 @@
 </div>
 
 <div class="buttons">
-    <button id="save-button">Save</button>
+    <button id="open-options" type="button" class="secondary">Manage prompts…</button>
+    <button id="save-button" type="button">Save</button>
 </div>
 
 <div id="status" class="status"></div>
@@ -261,6 +286,6 @@
     <p>You can get an API key from the <a href="https://platform.openai.com/account/api-keys" target="_blank">OpenAI dashboard</a>.</p>
 </div>
 
-<script src="popup.js"></script>
+<script type="module" src="./popup.ts"></script>
 </body>
 </html>
