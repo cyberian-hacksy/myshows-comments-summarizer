@@ -16,6 +16,16 @@ export interface PromptOverride {
   template?: string
 }
 
+/** Normalized token usage from a Responses API reply. */
+export interface TokenUsage {
+  inputTokens: number
+  /** Subset of inputTokens billed at the discounted cached rate. */
+  cachedInputTokens: number
+  outputTokens: number
+  /** Subset of outputTokens spent on reasoning (reasoning models only). */
+  reasoningTokens?: number
+}
+
 export interface Settings {
   openaiApiKey: string
   selectedModel: string

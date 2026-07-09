@@ -1,3 +1,5 @@
+import type { TokenUsage } from './types'
+
 export interface SummaryRequest {
   apiKey: string
   model: string
@@ -7,12 +9,17 @@ export interface SummaryRequest {
   maxTokens: number
 }
 
+export interface SummaryResult {
+  text: string
+  usage?: TokenUsage
+}
+
 /** Reasoning models reject `temperature` and burn output tokens on thinking. */
 export function isReasoningModel(model: string): boolean {
   return /^(o\d|gpt-5)/.test(model)
 }
 
-export async function requestSummary(req: SummaryRequest): Promise<string> {
+export async function requestSummary(req: SummaryRequest): Promise<SummaryResult> {
   const reasoning = isReasoningModel(req.model)
   const body: Record<string, unknown> = {
     model: req.model,
@@ -25,7 +32,7 @@ export async function requestSummary(req: SummaryRequest): Promise<string> {
   return send(req.apiKey, body)
 }
 
-async function send(apiKey: string, body: Record<string, unknown>): Promise<string> {
+async function send(apiKey: string, body: Record<string, unknown>): Promise<SummaryResult> {
   const response = await fetch('https://api.openai.com/v1/responses', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
@@ -45,7 +52,7 @@ async function send(apiKey: string, body: Record<string, unknown>): Promise<stri
     }
     throw new Error(`API request failed: ${message}`)
   }
-  return extractText(data)
+  return { text: extractText(data), usage: extractUsage(data) }
 }
 
 interface ResponsesOutput {
@@ -53,6 +60,25 @@ interface ResponsesOutput {
   incomplete_details?: { reason?: string }
   output_text?: string
   output?: Array<{ type?: string; content?: Array<{ text?: unknown }> }>
+  usage?: {
+    input_tokens?: number
+    input_tokens_details?: { cached_tokens?: number }
+    output_tokens?: number
+    output_tokens_details?: { reasoning_tokens?: number }
+  }
+}
+
+function extractUsage(data: ResponsesOutput): TokenUsage | undefined {
+  const usage = data?.usage
+  if (typeof usage?.input_tokens !== 'number' || typeof usage?.output_tokens !== 'number') {
+    return undefined
+  }
+  return {
+    inputTokens: usage.input_tokens,
+    cachedInputTokens: usage.input_tokens_details?.cached_tokens ?? 0,
+    outputTokens: usage.output_tokens,
+    reasoningTokens: usage.output_tokens_details?.reasoning_tokens ?? 0,
+  }
 }
 
 function extractText(data: ResponsesOutput): string {

@@ -12,19 +12,6 @@ export const DEFAULT_MODELS = [
   'o4-mini',
 ]
 
-/** Curated blurbs for models we know; unknown ids simply get no description. */
-export const MODEL_DESCRIPTIONS: Record<string, string> = {
-  'gpt-4o': 'Fast, intelligent, flexible GPT model',
-  'gpt-4.1': 'Smartest model for complex tasks',
-  'gpt-5': 'Most advanced model for complex tasks',
-  'gpt-4o-mini': 'Fast, affordable small model for focused tasks',
-  'gpt-4.1-mini': 'Affordable model balancing speed and intelligence',
-  'gpt-4.1-nano': 'Fastest, most cost-effective model for low-latency tasks',
-  'gpt-5-mini': 'Compact GPT-5 model for fast, affordable tasks',
-  'gpt-5-nano': 'Smallest GPT-5 model for ultra-low latency tasks',
-  'o4-mini': 'Faster, more affordable reasoning model',
-}
-
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000
 
 export interface ModelCache {

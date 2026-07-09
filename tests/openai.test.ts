@@ -21,7 +21,7 @@ describe('requestSummary', () => {
   test('calls the Responses API with temperature for non-reasoning models', async () => {
     const mock = stubFetch({ status: 'completed', output_text: 'summary' })
     const result = await requestSummary({ ...base, model: 'gpt-4o' })
-    expect(result).toBe('summary')
+    expect(result.text).toBe('summary')
     const [url, options] = mock.mock.calls[0] as unknown as [string, RequestInit]
     expect(url).toBe('https://api.openai.com/v1/responses')
     expect((options.headers as Record<string, string>).Authorization).toBe('Bearer sk-test')
@@ -57,7 +57,7 @@ describe('requestSummary', () => {
         json: async () => ({ status: 'completed', output_text: 'ok' }),
       })
     vi.stubGlobal('fetch', mock)
-    expect(await requestSummary({ ...base, model: 'gpt-4o' })).toBe('ok')
+    expect((await requestSummary({ ...base, model: 'gpt-4o' })).text).toBe('ok')
     expect(mock).toHaveBeenCalledTimes(2)
     const retryBody = JSON.parse(
       (mock.mock.calls[1] as unknown as [string, RequestInit])[1].body as string,
@@ -80,7 +80,34 @@ describe('requestSummary', () => {
         { type: 'message', content: [{ type: 'output_text', text: 'from items' }] },
       ],
     })
-    expect(await requestSummary({ ...base, model: 'gpt-5' })).toBe('from items')
+    expect((await requestSummary({ ...base, model: 'gpt-5' })).text).toBe('from items')
+  })
+
+  test('normalizes token usage from the response', async () => {
+    stubFetch({
+      status: 'completed',
+      output_text: 'summary',
+      usage: {
+        input_tokens: 1200,
+        input_tokens_details: { cached_tokens: 800 },
+        output_tokens: 350,
+        output_tokens_details: { reasoning_tokens: 100 },
+        total_tokens: 1550,
+      },
+    })
+    const result = await requestSummary({ ...base, model: 'gpt-5' })
+    expect(result.usage).toEqual({
+      inputTokens: 1200,
+      cachedInputTokens: 800,
+      outputTokens: 350,
+      reasoningTokens: 100,
+    })
+  })
+
+  test('returns undefined usage when the response has none', async () => {
+    stubFetch({ status: 'completed', output_text: 'summary' })
+    const result = await requestSummary({ ...base, model: 'gpt-4o' })
+    expect(result.usage).toBeUndefined()
   })
 
   test('explains truncation when the response is incomplete', async () => {

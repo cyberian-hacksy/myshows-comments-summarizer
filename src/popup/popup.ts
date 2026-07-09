@@ -1,6 +1,8 @@
 import languagesData from '../../languages.json'
-import { loadModelList, MODEL_DESCRIPTIONS } from '../models'
+import { loadModelList } from '../models'
 import { fetchAvailableModels } from '../openai'
+import { estimateOutputCost, formatCost, loadPricing, modelLabel } from '../pricing'
+import type { PricingMap } from '../pricing'
 import { getSettings, saveSettings } from '../storage'
 import { DEFAULT_SETTINGS } from '../types'
 
@@ -30,6 +32,9 @@ function el<T extends HTMLElement>(id: string): T {
 
 // ---- Model dropdown ----
 
+// Prices per 1M tokens; empty until loadPricing resolves, then options are relabeled.
+let pricingMap: PricingMap = {}
+
 function populateModelSelect(ids: string[], selected: string): void {
   const select = el<HTMLSelectElement>('model-selection')
   select.replaceChildren()
@@ -50,19 +55,36 @@ function populateModelSelect(ids: string[], selected: string): void {
     for (const id of groupIds) {
       const option = document.createElement('option')
       option.value = id
-      option.textContent = id
+      option.textContent = modelLabel(id, pricingMap[id])
       optgroup.appendChild(option)
     }
     select.appendChild(optgroup)
   }
 
   if (selected) select.value = selected
-  updateModelDescription()
+  updateCostEstimate()
 }
 
-function updateModelDescription(): void {
+function updateCostEstimate(): void {
   const select = el<HTMLSelectElement>('model-selection')
-  el('model-description').textContent = MODEL_DESCRIPTIONS[select.value] ?? ''
+  const pricing = pricingMap[select.value]
+  let text = ''
+  if (pricing) {
+    const maxTokens = parseInt(el<HTMLSelectElement>('max-tokens').value, 10)
+    const estimate = estimateOutputCost(pricing, maxTokens, select.value)
+    text = `Output cost up to ~${formatCost(estimate)} per summary`
+  }
+  el('model-description').textContent = text
+}
+
+/** Once prices arrive, relabel the already-painted options in place. */
+async function loadPrices(): Promise<void> {
+  pricingMap = await loadPricing()
+  const select = el<HTMLSelectElement>('model-selection')
+  for (const option of Array.from(select.options)) {
+    option.textContent = modelLabel(option.value, pricingMap[option.value])
+  }
+  updateCostEstimate()
 }
 
 let modelLoadSeq = 0
@@ -88,7 +110,7 @@ async function loadModels(apiKey: string, selected: string, force = false): Prom
     },
   })
   if (seq === modelLoadSeq) {
-    updateModelDescription()
+    updateCostEstimate()
     if (outcome === 'error') {
       showStatus('Could not load the model list from OpenAI — using the fallback list.', 'error')
     }
@@ -303,7 +325,11 @@ async function restoreOptions(): Promise<void> {
   // language/model are highlighted correctly (no async race).
   populateLanguageDropdown(languagesList)
 
+  // Prices load in parallel with the model list; whichever lands last wins
+  // because both repaint labels from the shared pricingMap.
+  const pricesReady = loadPrices().catch((error) => console.warn('Pricing load failed', error))
   await loadModels(settings.openaiApiKey, settings.selectedModel)
+  await pricesReady
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -311,7 +337,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   el('save-button').addEventListener('click', () => void saveOptions())
   el('open-options').addEventListener('click', () => chrome.runtime.openOptionsPage())
-  el<HTMLSelectElement>('model-selection').addEventListener('change', updateModelDescription)
+  el<HTMLSelectElement>('model-selection').addEventListener('change', updateCostEstimate)
+  el<HTMLSelectElement>('max-tokens').addEventListener('change', updateCostEstimate)
   el<HTMLInputElement>('temperature-slider').addEventListener('input', updateTemperatureValue)
   el('refresh-models').addEventListener('click', () => {
     const apiKey = el<HTMLInputElement>('openai-api-key').value.trim()

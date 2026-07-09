@@ -1,8 +1,37 @@
 import { requestSummary } from '../openai'
+import { computeCost, formatCost, loadPricing } from '../pricing'
 import { DEFAULT_SYSTEM_PROMPT, mergePrompts, renderPrompt } from '../prompts'
+import type { TokenUsage } from '../types'
 import { getPromptState, getSettings } from '../storage'
 import { getPromptDisplayName } from './dom-utils'
 import { extractComments } from './extract-comments'
+
+/**
+ * Append the factual cost of the summary to the "N comments analyzed" note,
+ * with a token breakdown in the tooltip. Falls back to a plain token count
+ * when the model's pricing is unknown.
+ */
+async function showCost(
+  commentCount: HTMLElement,
+  commentsAnalyzed: number,
+  model: string,
+  usage: TokenUsage,
+): Promise<void> {
+  const pricing = (await loadPricing())[model]
+  const spent = pricing
+    ? formatCost(computeCost(pricing, usage))
+    : `${usage.inputTokens + usage.outputTokens} tokens`
+  commentCount.textContent = `${commentsAnalyzed} comments analyzed · ${spent}`
+
+  const input =
+    usage.cachedInputTokens > 0
+      ? `${usage.inputTokens} input tokens (${usage.cachedInputTokens} cached)`
+      : `${usage.inputTokens} input tokens`
+  const output = usage.reasoningTokens
+    ? `${usage.outputTokens} output tokens (${usage.reasoningTokens} reasoning)`
+    : `${usage.outputTokens} output tokens`
+  commentCount.title = `${input} · ${output}`
+}
 
 // Handle summarize button click.
 export async function handleSummarizeClick(): Promise<void> {
@@ -68,7 +97,7 @@ export async function handleSummarizeClick(): Promise<void> {
       `Using model: ${settings.selectedModel}, prompt: ${prompt.id}, language: ${settings.summaryLanguage}`,
     )
 
-    const summary = await requestSummary({
+    const { text, usage } = await requestSummary({
       apiKey: settings.openaiApiKey,
       model: settings.selectedModel,
       system: promptState.systemPrompt ?? DEFAULT_SYSTEM_PROMPT,
@@ -77,7 +106,8 @@ export async function handleSummarizeClick(): Promise<void> {
       maxTokens: settings.maxTokens,
     })
 
-    summaryContent.textContent = summary
+    summaryContent.textContent = text
+    if (usage) await showCost(commentCount, comments.length, settings.selectedModel, usage)
   } catch (error) {
     console.error('Error generating summary:', error)
     const message = error instanceof Error ? error.message : ''
