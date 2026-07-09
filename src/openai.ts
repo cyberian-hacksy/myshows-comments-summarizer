@@ -7,6 +7,8 @@ export interface SummaryRequest {
   user: string
   temperature: number
   maxTokens: number
+  /** When provided, the response is streamed; called with the full text so far on each chunk. */
+  onDelta?: (text: string) => void
 }
 
 export interface SummaryResult {
@@ -29,18 +31,25 @@ export async function requestSummary(req: SummaryRequest): Promise<SummaryResult
     max_output_tokens: reasoning ? req.maxTokens * 3 : req.maxTokens,
   }
   if (!reasoning) body.temperature = req.temperature
-  return send(req.apiKey, body)
+  if (req.onDelta) body.stream = true
+  return send(req.apiKey, body, req.onDelta)
 }
 
-async function send(apiKey: string, body: Record<string, unknown>): Promise<SummaryResult> {
+async function send(
+  apiKey: string,
+  body: Record<string, unknown>,
+  onDelta?: (text: string) => void,
+): Promise<SummaryResult> {
   const response = await fetch('https://api.openai.com/v1/responses', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
     body: JSON.stringify(body),
   })
-  const data = await response.json()
   if (!response.ok) {
-    const message: string = data?.error?.message ?? 'Unknown API error'
+    // Error responses are plain JSON even when a stream was requested.
+    const data = await response.json()
+    const error = data?.error as { message?: string; param?: string } | undefined
+    const message = error?.message ?? 'Unknown API error'
     // Self-heal: some models reject temperature; drop it and retry once.
     if (
       /unsupported parameter/i.test(message) &&
@@ -48,11 +57,91 @@ async function send(apiKey: string, body: Record<string, unknown>): Promise<Summ
       'temperature' in body
     ) {
       const { temperature: _drop, ...rest } = body
+      return send(apiKey, rest, onDelta)
+    }
+    // Self-heal: some account/model combinations may not stream (e.g. an
+    // unverified org with gpt-5/o3); retry once without streaming.
+    if ('stream' in body && (error?.param === 'stream' || /stream/i.test(message))) {
+      const { stream: _drop, ...rest } = body
       return send(apiKey, rest)
     }
     throw new Error(`API request failed: ${message}`)
   }
+  if (body.stream && onDelta && response.body) {
+    return readStream(response.body, onDelta)
+  }
+  const data = await response.json()
   return { text: extractText(data), usage: extractUsage(data) }
+}
+
+interface StreamEvent {
+  type?: string
+  delta?: string
+  message?: string
+  response?: ResponsesOutput & { error?: { message?: string } }
+}
+
+/** Read a Responses API SSE stream, reporting accumulated text on each delta. */
+async function readStream(
+  stream: ReadableStream<Uint8Array>,
+  onDelta: (text: string) => void,
+): Promise<SummaryResult> {
+  const reader = stream.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+  let text = ''
+  let final: StreamEvent['response']
+
+  const handleEvent = (raw: string) => {
+    const data = raw
+      .split('\n')
+      .filter((line) => line.startsWith('data:'))
+      .map((line) => line.slice(5).trim())
+      .join('\n')
+    if (!data || data === '[DONE]') return
+    let event: StreamEvent
+    try {
+      event = JSON.parse(data)
+    } catch {
+      return
+    }
+    if (event.type === 'response.output_text.delta' && typeof event.delta === 'string') {
+      text += event.delta
+      onDelta(text)
+    } else if (event.type === 'error') {
+      throw new Error(`API request failed: ${event.message ?? 'Unknown API error'}`)
+    } else if (
+      event.type === 'response.completed' ||
+      event.type === 'response.incomplete' ||
+      event.type === 'response.failed'
+    ) {
+      final = event.response
+    }
+  }
+
+  try {
+    // SSE events are separated by blank lines; chunks may split events anywhere.
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      buffer += decoder.decode(value, { stream: true })
+      let boundary: number
+      while ((boundary = buffer.indexOf('\n\n')) !== -1) {
+        handleEvent(buffer.slice(0, boundary))
+        buffer = buffer.slice(boundary + 2)
+      }
+    }
+  } finally {
+    reader.releaseLock()
+  }
+
+  if (!final) throw new Error('Unexpected API response structure')
+  if (final.status === 'failed') {
+    throw new Error(`API request failed: ${final.error?.message ?? 'Unknown API error'}`)
+  }
+  const streamed = text.trim()
+  if (streamed) return { text: streamed, usage: extractUsage(final) }
+  return { text: extractText(final), usage: extractUsage(final) }
 }
 
 interface ResponsesOutput {

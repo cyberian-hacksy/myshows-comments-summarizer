@@ -104,6 +104,9 @@ export async function handleSummarizeClick(): Promise<void> {
       user: renderPrompt(prompt, comments, settings.summaryLanguage),
       temperature: settings.temperature,
       maxTokens: settings.maxTokens,
+      onDelta: (partial) => {
+        summaryContent.textContent = partial
+      },
     })
 
     summaryContent.textContent = text
