@@ -6,10 +6,6 @@ import { handleSummarizeClick } from './summarize'
 // Keep track of the document click handler so we don't attach duplicates
 let documentClickHandler: ((e: MouseEvent) => void) | null = null
 
-const SELECTED_BG = '#3ec1ff'
-const SELECTED_FG = '#000'
-const IDLE_FG = '#e8e8e8'
-
 // Set up the prompt selector dropdown next to the summarize button.
 export function setupPromptSelector(): void {
   const selectorButton = document.getElementById('prompt-selector-button')
@@ -21,6 +17,14 @@ export function setupPromptSelector(): void {
     return
   }
 
+  // The split button hosts the chevron; the is-open class drives its rotation.
+  const splitButton = document.getElementById('mcs-split-button')
+
+  const setDropdownOpen = (open: boolean): void => {
+    dropdown.style.display = open ? 'block' : 'none'
+    splitButton?.classList.toggle('is-open', open)
+  }
+
   // Rebuild dropdown options from the merged prompt list. Prompt names are
   // user-controlled, so build nodes with textContent — never innerHTML.
   async function populateOptions(): Promise<void> {
@@ -30,31 +34,11 @@ export function setupPromptSelector(): void {
 
     optionsContainer!.replaceChildren()
 
-    prompts.forEach((prompt, index) => {
+    prompts.forEach((prompt) => {
       const option = document.createElement('div')
-      option.className = 'prompt-option'
+      option.className = prompt.id === selectedId ? 'mcs-option is-selected' : 'mcs-option'
       option.dataset.prompt = prompt.id
       option.textContent = prompt.name
-      const isSelected = prompt.id === selectedId
-      option.style.cssText = `
-        padding: 8px 12px;
-        cursor: pointer;
-        border-bottom: ${index === prompts.length - 1 ? 'none' : '1px solid #444'};
-        color: ${isSelected ? SELECTED_FG : IDLE_FG};
-        font-size: 14px;
-        background-color: ${isSelected ? SELECTED_BG : 'transparent'};
-      `
-
-      option.addEventListener('mouseenter', () => {
-        if (option.dataset.prompt !== selectedId) {
-          option.style.backgroundColor = '#444'
-        }
-      })
-      option.addEventListener('mouseleave', () => {
-        if (option.dataset.prompt !== selectedId) {
-          option.style.backgroundColor = 'transparent'
-        }
-      })
 
       option.addEventListener('click', async () => {
         const promptChanged = prompt.id !== selectedId
@@ -66,7 +50,7 @@ export function setupPromptSelector(): void {
           buttonText.textContent = getPromptDisplayName(prompts, prompt.id)
         }
 
-        dropdown!.style.display = 'none'
+        setDropdownOpen(false)
 
         // Trigger summarization if prompt changed
         if (promptChanged) {
@@ -84,10 +68,10 @@ export function setupPromptSelector(): void {
 
     if (dropdown.style.display === 'none' || dropdown.style.display === '') {
       void populateOptions().then(() => {
-        dropdown.style.display = 'block'
+        setDropdownOpen(true)
       })
     } else {
-      dropdown.style.display = 'none'
+      setDropdownOpen(false)
     }
   })
 
@@ -100,7 +84,7 @@ export function setupPromptSelector(): void {
   documentClickHandler = (e: MouseEvent) => {
     const target = e.target as Node
     if (!dropdown.contains(target) && !selectorButton.contains(target)) {
-      dropdown.style.display = 'none'
+      setDropdownOpen(false)
     }
   }
 

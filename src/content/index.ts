@@ -1,6 +1,5 @@
 // Content script entry point.
-import { INITIAL_DELAY } from './state'
-import { initPromptChangeListener, waitForStableDom } from './ui'
+import { armCommentsWatcher, initPromptChangeListener } from './ui'
 import { initURLChangeDetection } from './url-handler'
 
 declare global {
@@ -17,11 +16,10 @@ if (window.myShowsCommentSummarizerLoaded) {
 } else {
   window.myShowsCommentSummarizerLoaded = true
 
-  // Wait for the page to initialize before attempting to add the button
-  console.debug(`Waiting ${INITIAL_DELAY}ms for page to initialize...`)
-  setTimeout(waitForStableDom, INITIAL_DELAY)
+  // Insert the button as soon as the comments section exists
+  armCommentsWatcher()
 
-  initURLChangeDetection(waitForStableDom)
+  initURLChangeDetection(armCommentsWatcher)
   initPromptChangeListener()
 
   console.debug('MyShows Comment Summarizer content script finished executing')

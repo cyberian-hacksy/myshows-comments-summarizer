@@ -1,28 +1,26 @@
-// Configuration and mutable state for the content script.
+// Mutable state for the content script.
 
-// Wait time before even trying to add the button (let frameworks initialize)
-export const INITIAL_DELAY = 2000 // 2 seconds
-
-// Time to observe the page for stability before adding button
-export const STABILITY_WAIT_TIME = 1000 // 1 second
-
-// What we consider a "stable" page (no DOM changes for this duration)
-export const STABILITY_THRESHOLD = 500 // 0.5 seconds
+// SSR hydration adopts foreign DOM nodes it finds inside the app root, so the
+// very first insertion waits this long after the comments section appears.
+// Subsequent insertions (SPA navigation) are immediate — hydration runs once.
+export const HYDRATION_GRACE_MS = 1000
 
 interface ContentState {
   buttonAdded: boolean
   isAddingButton: boolean
   buttonCheckInterval: number | null
-  stabilityObserver: MutationObserver | null
-  lastDomChangeTime: number
-  stabilityTimer: number | null
+  /** Cancels the currently armed watchFor() watcher, if any. */
+  cancelWatch: (() => void) | null
+  /** True once the one-time hydration grace period has passed. */
+  hydrationGraceElapsed: boolean
+  hydrationGraceTimer: number | null
 }
 
 export const state: ContentState = {
   buttonAdded: false,
   isAddingButton: false,
   buttonCheckInterval: null,
-  stabilityObserver: null,
-  lastDomChangeTime: 0,
-  stabilityTimer: null,
+  cancelWatch: null,
+  hydrationGraceElapsed: false,
+  hydrationGraceTimer: null,
 }

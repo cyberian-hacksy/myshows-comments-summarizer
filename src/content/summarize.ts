@@ -31,17 +31,19 @@ export async function handleSummarizeClick(): Promise<void> {
 
   const resetButton = () => {
     spinner.style.display = 'none'
+    buttonIcon.style.display = 'inline-flex'
+    summaryContainer.classList.remove('is-loading')
     buttonText.textContent = idleLabel
     button.disabled = false
   }
 
-  // Show loading state
+  // Show loading state: the spinner replaces the icon, and the summary card
+  // gets an animated gradient border via the is-loading class.
   spinner.style.display = 'inline-block'
+  buttonIcon.style.display = 'none'
+  summaryContainer.classList.add('is-loading')
   buttonText.textContent = 'Analyzing...'
   button.disabled = true
-
-  // Make sure icon stays visible
-  buttonIcon.style.display = 'inline-flex'
 
   const comments = extractComments()
 

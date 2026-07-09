@@ -1,11 +1,12 @@
 import type { PromptDefinition } from '../types'
+import { releaseOrRemove } from './button-manager'
 
-// Remove any existing instances of our UI (guards against duplicates).
+// Clear out any existing instances of our UI (guards against duplicates).
 export function cleanupExistingElements(): void {
   const existingContainers = document.querySelectorAll('#comment-summarizer-container')
   existingContainers.forEach((container) => {
-    console.debug('Removing existing container')
-    container.remove()
+    console.debug('Clearing existing container')
+    releaseOrRemove(container)
   })
 
   // Also remove any orphaned styles
