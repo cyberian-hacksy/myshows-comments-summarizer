@@ -26,7 +26,8 @@ export const BUILTIN_PROMPTS: PromptDefinition[] = [
     template: `Please summarize these comments, covering:
 1. Overall reception: the general sentiment and whether viewers considered the episode good, bad, or divisive
 2. Main topics: what viewers discussed most (plot points, characters, theories), with the gist of what was said about each
-3. Disagreements and standout remarks: points where commenters contradicted each other, plus any unique insights or particularly funny comments
+3. Disagreements and standout remarks: points where commenters contradicted each other, plus any particularly funny comments
+4. Discoveries and highlights: main insights, aha moments, wow effects, anything outstanding viewers noticed, interesting cameos, and unobvious references or easter eggs commenters pointed out (omit this section entirely if the comments mention nothing like that)
 
 Each section must only contain information not already covered by another section. If a section has nothing new to add, omit it.${SHARED_SUFFIX}`,
   },
