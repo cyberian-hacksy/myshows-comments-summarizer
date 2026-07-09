@@ -7,6 +7,7 @@ import {
   loadPricing,
   modelLabel,
   parseOpenRouterPricing,
+  priceLabel,
 } from '../src/pricing'
 
 describe('parseOpenRouterPricing', () => {
@@ -182,5 +183,15 @@ describe('loadPricing', () => {
     const prices = await loadPricing({ fetcher, now: 1000 })
     expect(prices).toEqual(FALLBACK_PRICING)
     expect(localStore.pricingCache).toBeUndefined()
+  })
+})
+
+describe('priceLabel', () => {
+  test('formats input/output prices per 1M tokens', () => {
+    expect(priceLabel({ input: 1.25, output: 10 })).toBe('$1.25 / $10')
+  })
+
+  test('returns undefined without pricing', () => {
+    expect(priceLabel(undefined)).toBeUndefined()
   })
 })

@@ -1,5 +1,6 @@
 import { mergePrompts } from '../prompts'
 import { getPromptState, getSettings } from '../storage'
+import { sparklesIcon } from '../ui/sparkles'
 import { healContainer } from './button-manager'
 import {
   areCommentsLoaded,
@@ -220,20 +221,6 @@ const STYLES = `
   color: var(--mcs-text);
 }
 `
-
-// SVG gradient defs live in a page-global id namespace, so every gradient id
-// is mcs-prefixed and used by exactly one inline SVG.
-const sparklesIcon = (size: number, gradId: string): string => `
-<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="${gradId}" x1="2" y1="22" x2="22" y2="2" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#dd0cff"/>
-      <stop offset="1" stop-color="#00c8ff"/>
-    </linearGradient>
-  </defs>
-  <path d="M10 2.8l1.9 5 5 1.9-5 1.9-1.9 5-1.9-5-5-1.9 5-1.9 1.9-5z" fill="url(#${gradId})"/>
-  <path d="M18.6 12.8l1 2.6 2.6 1-2.6 1-1 2.6-1-2.6-2.6-1 2.6-1 1-2.6z" fill="url(#${gradId})"/>
-</svg>`
 
 const CHEVRON_ICON = `
 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

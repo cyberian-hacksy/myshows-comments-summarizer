@@ -1,0 +1,661 @@
+/*
+ * Shared design system for the extension's standalone pages (popup, options).
+ *
+ * Extends the on-site design language: the myshows magenta→cyan gradient is
+ * the single signature accent (sparkles, edge strips, active dots, one primary
+ * button); everything else stays quiet — site-like control geometry with 1px
+ * borders, 4px field radius, and 10px-radius floating panels.
+ *
+ * Extension pages can't read myshows' CSS variables (those live on the site),
+ * so the tokens are defined here and flip with the system theme.
+ */
+
+:root {
+  color-scheme: light dark;
+
+  --mcs-grad: linear-gradient(88.42deg, #dd0cff 9.62%, #00c8ff 90.87%);
+  --mcs-grad-soft: linear-gradient(88.42deg, rgba(221, 12, 255, 0.08), rgba(0, 200, 255, 0.08));
+
+  --mcs-bg: #f2f3f5;
+  --mcs-surface: #ffffff;
+  --mcs-text: #201f20;
+  --mcs-muted: #8a8a8f;
+  --mcs-border: #d9dbe0;
+  --mcs-accent: #0066cc;
+  --mcs-hover: #f0f0f2;
+  --mcs-danger: #c62828;
+  --mcs-danger-bg: #fdecea;
+  --mcs-shadow: rgba(32, 31, 32, 0.14);
+  --mcs-overlay: rgba(32, 31, 32, 0.35);
+
+  --mcs-radius-field: 4px;
+  --mcs-radius-card: 8px;
+  --mcs-radius-panel: 10px;
+  --mcs-font: "PT Sans", -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --mcs-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --mcs-bg: #17181d;
+    --mcs-surface: #212329;
+    --mcs-text: #e8e8ea;
+    --mcs-muted: #8b8d94;
+    --mcs-border: #35373f;
+    --mcs-accent: #58a6ff;
+    --mcs-hover: #2a2c34;
+    --mcs-danger: #ef5350;
+    --mcs-danger-bg: rgba(239, 83, 80, 0.12);
+    --mcs-shadow: rgba(0, 0, 0, 0.5);
+    --mcs-overlay: rgba(0, 0, 0, 0.55);
+  }
+}
+
+/* ---- Base ---- */
+
+body {
+  margin: 0;
+  background: var(--mcs-bg);
+  color: var(--mcs-text);
+  font-family: var(--mcs-font);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+:focus-visible {
+  outline: 2px solid var(--mcs-accent);
+  outline-offset: 1px;
+}
+
+/* Components set their own display, which would beat the UA's [hidden] rule —
+   make the attribute always win. */
+[hidden] {
+  display: none !important;
+}
+
+/* ---- Page header ---- */
+
+.mcs-page-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.mcs-page-title svg {
+  flex: 0 0 auto;
+}
+
+/* ---- Cards ---- */
+
+.mcs-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--mcs-border);
+  border-radius: var(--mcs-radius-card);
+  background: var(--mcs-surface);
+  padding: 18px 20px;
+}
+
+/* Signature treatment from the on-site AI Summary card: gradient strip on the
+   left edge plus a faint gradient wash under the content. */
+.mcs-card-accent::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--mcs-grad);
+  opacity: 0.045;
+  pointer-events: none;
+}
+
+.mcs-card-accent::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--mcs-grad);
+  pointer-events: none;
+}
+
+.mcs-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--mcs-border);
+}
+
+.mcs-card-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+/* ---- Buttons ---- */
+
+.mcs-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 7px 14px;
+  border: 1px solid transparent;
+  border-radius: var(--mcs-radius-field);
+  background: transparent;
+  font: inherit;
+  font-weight: 700;
+  line-height: 20px;
+  color: var(--mcs-text);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease,
+    filter 0.15s ease;
+}
+
+.mcs-btn:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+/* The one bold element per view: gradient fill, white text. */
+.mcs-btn-primary {
+  background: var(--mcs-grad);
+  color: #fff;
+  border: 0;
+  padding: 8px 15px;
+  text-shadow: 0 1px 2px rgba(32, 31, 32, 0.25);
+}
+
+.mcs-btn-primary:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.mcs-btn-quiet {
+  border-color: var(--mcs-border);
+}
+
+.mcs-btn-quiet:hover:not(:disabled) {
+  background: var(--mcs-hover);
+}
+
+.mcs-btn-danger {
+  border-color: var(--mcs-danger);
+  color: var(--mcs-danger);
+}
+
+.mcs-btn-danger:hover:not(:disabled) {
+  background: var(--mcs-danger-bg);
+}
+
+.mcs-btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border: 0;
+  border-radius: var(--mcs-radius-field);
+  background: transparent;
+  color: var(--mcs-muted);
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.mcs-btn-icon:hover:not(:disabled) {
+  background: var(--mcs-hover);
+  color: var(--mcs-accent);
+}
+
+/* ---- Fields ---- */
+
+.mcs-field {
+  margin-bottom: 14px;
+}
+
+.mcs-field-label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.mcs-field-hint {
+  margin: 5px 0 0;
+  font-size: 12.5px;
+  color: var(--mcs-muted);
+}
+
+.mcs-field-hint code,
+.mcs-chip code {
+  font-family: var(--mcs-mono);
+  font-size: 11.5px;
+}
+
+.mcs-input,
+.mcs-textarea,
+.mcs-select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border: 1px solid var(--mcs-border);
+  border-radius: var(--mcs-radius-field);
+  background: var(--mcs-surface);
+  color: var(--mcs-text);
+  font: inherit;
+  font-size: 14px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.mcs-input:focus,
+.mcs-textarea:focus,
+.mcs-select:focus {
+  outline: none;
+  border-color: var(--mcs-accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--mcs-accent) 22%, transparent);
+}
+
+.mcs-textarea {
+  font-family: var(--mcs-mono);
+  font-size: 13px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.mcs-select {
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+    linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: calc(100% - 16px) 55%, calc(100% - 11px) 55%;
+  background-size: 5px 5px;
+  background-repeat: no-repeat;
+  padding-right: 30px;
+  cursor: pointer;
+}
+
+/* Range input: gradient-filled track (set --mcs-range-fill from JS as a %). */
+.mcs-range {
+  --mcs-range-fill: 50%;
+  width: 100%;
+  appearance: none;
+  height: 4px;
+  border-radius: 2px;
+  background:
+    linear-gradient(to right, transparent var(--mcs-range-fill), var(--mcs-border) var(--mcs-range-fill)),
+    var(--mcs-grad);
+  background-repeat: no-repeat;
+  cursor: pointer;
+  margin: 9px 0 5px;
+}
+
+.mcs-range::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--mcs-surface);
+  border: 2px solid var(--mcs-accent);
+  box-shadow: 0 1px 3px var(--mcs-shadow);
+  transition: transform 0.15s ease;
+}
+
+.mcs-range::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+/* ---- Chips & badges ---- */
+
+.mcs-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border: 1px solid var(--mcs-border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--mcs-text);
+  font-family: var(--mcs-mono);
+  font-size: 11.5px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.mcs-chip:hover {
+  border-color: var(--mcs-accent);
+  color: var(--mcs-accent);
+  background: var(--mcs-hover);
+}
+
+.mcs-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border: 1px solid var(--mcs-border);
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--mcs-muted);
+  white-space: nowrap;
+}
+
+.mcs-badge-edited {
+  border-color: transparent;
+  background: var(--mcs-grad-soft);
+  color: var(--mcs-accent);
+}
+
+.mcs-badge-unsaved {
+  border-color: transparent;
+  background: var(--mcs-grad);
+  color: #fff;
+}
+
+/* Gradient dot: the on-site idiom for "active/selected". */
+.mcs-dot {
+  flex: 0 0 auto;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--mcs-grad);
+  box-shadow: 0 0 6px rgba(0, 200, 255, 0.55);
+}
+
+/* ---- Inline warning ---- */
+
+.mcs-warning {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin: 6px 0 0;
+  font-size: 12.5px;
+  color: #b26a00;
+}
+
+@media (prefers-color-scheme: dark) {
+  .mcs-warning {
+    color: #e0b25e;
+  }
+}
+
+/* ---- Toast ---- */
+
+.mcs-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  z-index: 2000;
+  padding: 8px 16px;
+  border: 1px solid var(--mcs-border);
+  border-radius: 999px;
+  background: var(--mcs-surface);
+  box-shadow: 0 6px 24px var(--mcs-shadow);
+  font-size: 13.5px;
+  font-weight: 700;
+  animation: mcs-toast-in 0.2s ease;
+}
+
+.mcs-toast.is-error {
+  border-color: var(--mcs-danger);
+  color: var(--mcs-danger);
+}
+
+.mcs-toast.is-leaving {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+@keyframes mcs-toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* ---- Dialog ---- */
+
+.mcs-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--mcs-overlay);
+  animation: mcs-fade-in 0.15s ease;
+}
+
+.mcs-dialog {
+  position: relative;
+  overflow: hidden;
+  width: min(420px, calc(100vw - 48px));
+  padding: 20px 22px;
+  border: 1px solid var(--mcs-border);
+  border-radius: var(--mcs-radius-panel);
+  background: var(--mcs-surface);
+  box-shadow: 0 10px 30px var(--mcs-shadow);
+  animation: mcs-pop 0.18s ease;
+}
+
+.mcs-dialog::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--mcs-grad);
+}
+
+.mcs-dialog-title {
+  margin: 0 0 8px;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.mcs-dialog-message {
+  margin: 0 0 18px;
+  font-size: 14px;
+  color: var(--mcs-muted);
+}
+
+.mcs-dialog-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* ---- Searchable dropdown ---- */
+
+.mcs-dd {
+  position: relative;
+}
+
+.mcs-dd-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border: 1px solid var(--mcs-border);
+  border-radius: var(--mcs-radius-field);
+  background: var(--mcs-surface);
+  color: var(--mcs-text);
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.mcs-dd.is-open .mcs-dd-trigger {
+  border-color: var(--mcs-accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--mcs-accent) 22%, transparent);
+}
+
+.mcs-dd-trigger-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mcs-dd-chevron {
+  flex: 0 0 auto;
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid var(--mcs-muted);
+  transition: transform 0.2s ease;
+}
+
+.mcs-dd.is-open .mcs-dd-chevron {
+  transform: rotate(180deg);
+}
+
+.mcs-dd-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  padding: 6px;
+  border: 1px solid var(--mcs-border);
+  border-radius: var(--mcs-radius-panel);
+  background: var(--mcs-surface);
+  box-shadow: 0 10px 30px var(--mcs-shadow);
+  animation: mcs-pop 0.18s ease;
+}
+
+.mcs-dd-search {
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 5px;
+  padding: 7px 9px;
+  border: 1px solid var(--mcs-border);
+  border-radius: 7px;
+  background: transparent;
+  color: var(--mcs-text);
+  font: inherit;
+  font-size: 13.5px;
+}
+
+.mcs-dd-search:focus {
+  outline: none;
+  border-color: var(--mcs-accent);
+}
+
+.mcs-dd-list {
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.mcs-dd-group-label {
+  padding: 7px 11px 3px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--mcs-muted);
+}
+
+.mcs-dd-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 9px;
+  padding: 8px 11px;
+  border-radius: 7px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.mcs-dd-option::before {
+  content: "";
+  flex: 0 0 auto;
+  order: -1;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--mcs-border);
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.mcs-dd-option:hover,
+.mcs-dd-option:focus-visible {
+  background: var(--mcs-hover);
+  outline: none;
+}
+
+.mcs-dd-option.is-selected {
+  color: var(--mcs-accent);
+  font-weight: 700;
+}
+
+.mcs-dd-option.is-selected::before {
+  background: var(--mcs-grad);
+  box-shadow: 0 0 6px rgba(0, 200, 255, 0.55);
+}
+
+.mcs-dd-option-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mcs-dd-option-sub {
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--mcs-muted);
+}
+
+/* ---- Shared animations ---- */
+
+@keyframes mcs-pop {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes mcs-rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes mcs-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

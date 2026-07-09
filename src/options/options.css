@@ -1,186 +1,194 @@
-body {
-    font-family: Arial, sans-serif;
-    max-width: 900px;
+@import "../ui/theme.css";
+
+/* Prompt library page layout. Component styling comes from the shared theme. */
+
+.page {
+    max-width: 960px;
     margin: 0 auto;
-    padding: 24px;
-    color: #222;
+    padding: 28px 24px 48px;
 }
 
-h1 {
-    font-size: 22px;
-    margin: 0 0 8px;
+.page-head {
+    margin-bottom: 22px;
+    animation: mcs-rise 0.35s ease;
 }
 
-h2 {
-    font-size: 17px;
-    margin: 0 0 8px;
-}
-
-.hint {
-    font-size: 13px;
-    color: #666;
-    margin: 0 0 20px;
-}
-
-.hint code {
-    background: #f0f0f0;
-    padding: 1px 4px;
-    border-radius: 3px;
+.page-subtitle {
+    margin: 6px 0 0;
+    font-size: 13.5px;
+    color: var(--mcs-muted);
 }
 
 .layout {
     display: grid;
-    grid-template-columns: 240px 1fr;
-    gap: 24px;
+    grid-template-columns: 260px 1fr;
+    gap: 20px;
     align-items: start;
+    animation: mcs-rise 0.35s ease 0.05s backwards;
 }
+
+@media (max-width: 720px) {
+    .layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ---- Prompt list ---- */
 
 aside {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
+}
+
+.list-card {
+    padding: 6px;
 }
 
 #prompt-list {
     list-style: none;
     margin: 0;
     padding: 0;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    overflow: hidden;
-}
-
-#prompt-list li + li {
-    border-top: 1px solid #eee;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
 }
 
 #prompt-list button {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    gap: 8px;
+    gap: 9px;
     width: 100%;
-    padding: 10px 12px;
-    background: white;
-    border: none;
+    padding: 9px 11px;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    font: inherit;
     font-size: 14px;
     text-align: left;
+    color: var(--mcs-text);
     cursor: pointer;
-    color: #222;
+    transition: background 0.15s ease;
 }
 
 #prompt-list button:hover {
-    background: #f5f5f5;
+    background: var(--mcs-hover);
 }
 
 #prompt-list li.selected button {
-    background: #e6f7ff;
+    background: var(--mcs-hover);
+    color: var(--mcs-accent);
+    font-weight: 700;
 }
 
-.badge {
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
-    color: #888;
-    border: 1px solid #ccc;
-    border-radius: 3px;
-    padding: 1px 5px;
+/* Every row carries a dot slot so names align; only the active prompt's dot
+   is lit with the gradient (same idiom as the on-site prompt dropdown). */
+#prompt-list .row-dot {
+    flex: 0 0 auto;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--mcs-border);
+    transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+
+#prompt-list li.active .row-dot {
+    background: var(--mcs-grad);
+    box-shadow: 0 0 6px rgba(0, 200, 255, 0.55);
+}
+
+#prompt-list .row-name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.badge.edited {
-    color: #b26a00;
-    border-color: #e0b25e;
+/* ---- Editor ---- */
+
+.editor-card {
+    min-height: 300px;
 }
 
-#editor,
-.system-section {
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    padding: 16px;
-}
-
-.system-section {
-    margin-top: 24px;
-}
-
-label {
-    display: block;
-    font-weight: bold;
-    font-size: 13px;
-    margin: 12px 0 4px;
-}
-
-label:first-child {
-    margin-top: 0;
-}
-
-input[type="text"],
-textarea {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+.editor-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 280px;
+    text-align: center;
+    color: var(--mcs-muted);
     font-size: 14px;
-    box-sizing: border-box;
 }
 
-textarea {
-    font-family: ui-monospace, Menlo, Consolas, monospace;
+.editor-empty svg {
+    opacity: 0.7;
+}
+
+.editor-head {
+    align-items: center;
+}
+
+.editor-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.active-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--mcs-accent);
+    padding-right: 4px;
+}
+
+.mcs-btn-sm {
+    padding: 4px 10px;
     font-size: 13px;
-    line-height: 1.45;
-    resize: vertical;
+    line-height: 18px;
+}
+
+.template-label-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.chips {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 5px;
+}
+
+.chips-label {
+    font-size: 11.5px;
+    color: var(--mcs-muted);
 }
 
 .editor-buttons {
     display: flex;
     gap: 10px;
+    margin-top: 4px;
+}
+
+/* ---- System prompt ---- */
+
+.system-card {
+    margin-top: 20px;
+    animation: mcs-rise 0.35s ease 0.1s backwards;
+}
+
+.system-hint {
+    margin: -4px 0 10px;
+}
+
+.system-card .editor-buttons {
     margin-top: 12px;
-}
-
-button {
-    background-color: #4285f4;
-    border: none;
-    color: white;
-    padding: 8px 16px;
-    font-size: 14px;
-    cursor: pointer;
-    border-radius: 4px;
-}
-
-button:hover {
-    background-color: #3b78e7;
-}
-
-button.secondary {
-    background-color: transparent;
-    color: #4285f4;
-    border: 1px solid #4285f4;
-}
-
-button.secondary:hover {
-    background-color: #eef4fe;
-}
-
-button.danger {
-    background-color: transparent;
-    color: #c62828;
-    border: 1px solid #c62828;
-    margin-left: auto;
-}
-
-button.danger:hover {
-    background-color: #fdecea;
-}
-
-#new-prompt {
-    align-self: stretch;
-}
-
-#editor-status,
-#system-status {
-    font-size: 13px;
-    color: #3c763d;
-    min-height: 1em;
-    margin: 10px 0 0;
 }

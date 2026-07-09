@@ -1,0 +1,119 @@
+@import "../ui/theme.css";
+
+/* Popup layout. Component styling comes from the shared theme. */
+
+body {
+    width: 360px;
+    background: var(--mcs-surface);
+}
+
+.popup {
+    padding: 14px 16px 10px;
+}
+
+/* Chrome caps popups at 600px tall — keep the whole page under that. */
+.popup .mcs-field {
+    margin-bottom: 10px;
+}
+
+.popup-head {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-bottom: 12px;
+    animation: mcs-rise 0.3s ease;
+}
+
+.popup-title {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 700;
+}
+
+.label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+    min-height: 24px;
+}
+
+.label-row .mcs-field-label {
+    margin-bottom: 0;
+}
+
+/* API key input with the reveal toggle living inside the field. */
+.key-wrap {
+    position: relative;
+}
+
+.key-wrap .mcs-input {
+    padding-right: 36px;
+    font-family: var(--mcs-mono);
+    font-size: 12.5px;
+}
+
+.key-reveal {
+    position: absolute;
+    top: 50%;
+    right: 4px;
+    transform: translateY(-50%);
+    display: inline-flex;
+    padding: 5px;
+}
+
+.temp-value {
+    font-family: var(--mcs-mono);
+    font-size: 12px;
+    padding: 1px 8px;
+    border: 1px solid var(--mcs-border);
+    border-radius: 999px;
+    color: var(--mcs-muted);
+}
+
+.popup-foot {
+    margin-top: 4px;
+}
+
+.popup-foot .mcs-btn {
+    width: 100%;
+}
+
+.note {
+    position: relative;
+    overflow: hidden;
+    margin-top: 10px;
+    padding: 10px 12px 10px 15px;
+    border: 1px solid var(--mcs-border);
+    border-radius: var(--mcs-radius-field);
+    font-size: 11.5px;
+    line-height: 1.45;
+    color: var(--mcs-muted);
+}
+
+.note::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--mcs-grad);
+}
+
+.note p {
+    margin: 0 0 6px;
+}
+
+.note p:last-child {
+    margin-bottom: 0;
+}
+
+.note a {
+    color: var(--mcs-accent);
+    text-decoration: none;
+}
+
+.note a:hover {
+    text-decoration: underline;
+}

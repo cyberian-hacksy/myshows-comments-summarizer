@@ -111,6 +111,11 @@ export function modelLabel(id: string, pricing?: ModelPricing): string {
   return pricing ? `${id} — ${perM(pricing.input)}/${perM(pricing.output)}` : id
 }
 
+/** "$1.25 / $10" — input/output prices per 1M tokens, for dropdown sublabels. */
+export function priceLabel(pricing?: ModelPricing): string | undefined {
+  return pricing ? `${perM(pricing.input)} / ${perM(pricing.output)}` : undefined
+}
+
 /** Worst-case output spend for one summary; mirrors requestSummary's token budget. */
 export function estimateOutputCost(
   pricing: ModelPricing,

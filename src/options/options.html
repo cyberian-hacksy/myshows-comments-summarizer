@@ -6,45 +6,87 @@
     <link rel="stylesheet" href="./options.css">
 </head>
 <body>
-<h1>Prompt Library</h1>
-<p class="hint">
-    Built-in prompts can be edited and reset to their defaults, but not deleted.
-    Available placeholders: <code>{count}</code> (number of comments),
-    <code>{comments}</code> (the comments themselves), <code>{language}</code> (summary language).
-</p>
+<div class="page">
+    <header class="page-head">
+        <h1 class="mcs-page-title"><span id="title-icon"></span>Prompt Library</h1>
+        <p class="page-subtitle">Prompts control what the summarizer asks the model to do.
+            Built-in prompts can be edited and reset, but not deleted.</p>
+    </header>
 
-<main class="layout">
-    <aside>
-        <ul id="prompt-list"></ul>
-        <button id="new-prompt" type="button">+ New prompt</button>
-    </aside>
+    <main class="layout">
+        <aside>
+            <div class="mcs-card list-card">
+                <ul id="prompt-list"></ul>
+            </div>
+            <button id="new-prompt" type="button" class="mcs-btn mcs-btn-quiet">+ New prompt</button>
+        </aside>
 
-    <section id="editor" hidden>
-        <label for="prompt-name">Name</label>
-        <input id="prompt-name" type="text" maxlength="60">
+        <section id="editor" class="mcs-card mcs-card-accent editor-card">
+            <div id="editor-empty" class="editor-empty">
+                <span id="empty-icon"></span>
+                <p>Select a prompt to edit,<br>or create a new one.</p>
+            </div>
 
-        <label for="prompt-template">Template</label>
-        <textarea id="prompt-template" rows="18" spellcheck="false"></textarea>
+            <div id="editor-form" hidden>
+                <div class="mcs-card-head editor-head">
+                    <h2 class="mcs-card-title">
+                        <span id="editor-title"></span>
+                        <span id="editor-badge" class="mcs-badge" hidden></span>
+                        <span id="unsaved-badge" class="mcs-badge mcs-badge-unsaved" hidden>unsaved</span>
+                    </h2>
+                    <div class="editor-actions">
+                        <span id="active-indicator" class="active-indicator" hidden>
+                            <span class="mcs-dot"></span>Active
+                        </span>
+                        <button id="make-active" type="button" class="mcs-btn mcs-btn-quiet mcs-btn-sm"
+                                title="Use this prompt for summaries">Make active</button>
+                        <button id="duplicate-prompt" type="button" class="mcs-btn mcs-btn-quiet mcs-btn-sm">Duplicate</button>
+                        <button id="delete-prompt" type="button" class="mcs-btn mcs-btn-danger mcs-btn-sm" hidden>Delete</button>
+                    </div>
+                </div>
 
-        <div class="editor-buttons">
-            <button id="save-prompt" type="button">Save</button>
-            <button id="reset-prompt" type="button" class="secondary" hidden>Reset to default</button>
-            <button id="delete-prompt" type="button" class="danger" hidden>Delete</button>
+                <div class="mcs-field">
+                    <label class="mcs-field-label" for="prompt-name">Name</label>
+                    <input id="prompt-name" class="mcs-input" type="text" maxlength="60">
+                </div>
+
+                <div class="mcs-field">
+                    <div class="template-label-row">
+                        <label class="mcs-field-label" for="prompt-template">Template</label>
+                        <div class="chips" role="group" aria-label="Insert placeholder">
+                            <span class="chips-label">Insert:</span>
+                            <button type="button" class="mcs-chip" data-placeholder="{count}"
+                                    title="Number of comments"><code>{count}</code></button>
+                            <button type="button" class="mcs-chip" data-placeholder="{comments}"
+                                    title="The comments themselves"><code>{comments}</code></button>
+                            <button type="button" class="mcs-chip" data-placeholder="{language}"
+                                    title="Summary language"><code>{language}</code></button>
+                        </div>
+                    </div>
+                    <textarea id="prompt-template" class="mcs-textarea" rows="16" spellcheck="false"></textarea>
+                    <p id="template-warning" class="mcs-warning" hidden></p>
+                </div>
+
+                <div class="editor-buttons">
+                    <button id="save-prompt" type="button" class="mcs-btn mcs-btn-primary">Save</button>
+                    <button id="reset-prompt" type="button" class="mcs-btn mcs-btn-quiet" hidden>Reset to default</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <section class="mcs-card system-card">
+        <div class="mcs-card-head">
+            <h2 class="mcs-card-title">System prompt</h2>
         </div>
-        <p id="editor-status" role="status"></p>
+        <p class="mcs-field-hint system-hint">Sets the assistant's overall behavior for every summary.</p>
+        <textarea id="system-prompt" class="mcs-textarea" rows="3" spellcheck="false"></textarea>
+        <div class="editor-buttons">
+            <button id="save-system" type="button" class="mcs-btn mcs-btn-primary">Save</button>
+            <button id="reset-system" type="button" class="mcs-btn mcs-btn-quiet">Reset to default</button>
+        </div>
     </section>
-</main>
-
-<section class="system-section">
-    <h2>System prompt</h2>
-    <p class="hint">Sets the assistant's overall behavior for every summary.</p>
-    <textarea id="system-prompt" rows="3" spellcheck="false"></textarea>
-    <div class="editor-buttons">
-        <button id="save-system" type="button">Save</button>
-        <button id="reset-system" type="button" class="secondary">Reset to default</button>
-    </div>
-    <p id="system-status" role="status"></p>
-</section>
+</div>
 
 <script type="module" src="./options.ts"></script>
 </body>

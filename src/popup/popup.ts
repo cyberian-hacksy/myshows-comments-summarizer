@@ -1,10 +1,15 @@
 import languagesData from '../../languages.json'
-import { loadModelList } from '../models'
+import { loadModelList, writeModelCache } from '../models'
 import { fetchAvailableModels } from '../openai'
-import { estimateOutputCost, formatCost, loadPricing, modelLabel } from '../pricing'
+import { estimateOutputCost, formatCost, loadPricing, priceLabel } from '../pricing'
 import type { PricingMap } from '../pricing'
 import { getSettings, saveSettings } from '../storage'
-import { DEFAULT_SETTINGS } from '../types'
+import type { Settings } from '../types'
+import { debounce } from '../ui/debounce'
+import { createSearchableDropdown, type DropdownGroup } from '../ui/searchable-dropdown'
+import { sparklesIcon } from '../ui/sparkles'
+import { showToast } from '../ui/toast'
+import { verifyKey } from './verify-key'
 
 interface Language {
   code: string
@@ -23,67 +28,94 @@ const languagesList: Language[] = Object.entries(
   }))
   .sort((a, b) => a.name.localeCompare(b.name))
 
-// Store for the selected language
-let selectedLanguage = DEFAULT_SETTINGS.summaryLanguage
-
 function el<T extends HTMLElement>(id: string): T {
   return document.getElementById(id) as T
 }
 
+// Static SVGs — no user content involved.
+const EYE_ICON = `
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z" stroke="currentColor" stroke-width="1.8"/>
+  <circle cx="12" cy="12" r="2.6" stroke="currentColor" stroke-width="1.8"/>
+</svg>`
+
+const EYE_OFF_ICON = `
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z" stroke="currentColor" stroke-width="1.8"/>
+  <circle cx="12" cy="12" r="2.6" stroke="currentColor" stroke-width="1.8"/>
+  <path d="M4 20 20 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+</svg>`
+
+// ---- Settings persistence (auto-save) ----
+
+let settings: Settings
+
+async function persist(partial: Partial<Settings>): Promise<void> {
+  // selectedPromptId can change from the on-site dropdown while the popup is
+  // open — re-read it so a save here never clobbers that choice.
+  const { selectedPromptId } = await getSettings()
+  settings = { ...settings, ...partial, selectedPromptId }
+  await saveSettings(settings)
+  showToast('Saved.')
+}
+
 // ---- Model dropdown ----
 
-// Prices per 1M tokens; empty until loadPricing resolves, then options are relabeled.
+// Prices per 1M tokens; empty until loadPricing resolves, then groups are repainted.
 let pricingMap: PricingMap = {}
+let modelIds: string[] = []
 
-function populateModelSelect(ids: string[], selected: string): void {
-  const select = el<HTMLSelectElement>('model-selection')
-  select.replaceChildren()
+const modelDropdown = createSearchableDropdown({
+  placeholder: 'Select a model',
+  searchPlaceholder: 'Search models…',
+  onSelect: (value) => {
+    updateCostEstimate()
+    void persist({ selectedModel: value })
+  },
+})
 
+const languageDropdown = createSearchableDropdown({
+  placeholder: 'Select a language',
+  searchPlaceholder: 'Search languages…',
+  onSelect: (value) => void persist({ summaryLanguage: value }),
+})
+
+function modelGroups(ids: string[]): DropdownGroup[] {
   // Never lose a saved model just because it vanished from the list
+  const selected = modelDropdown.getSelected()
   const allIds = ids.includes(selected) || !selected ? ids : [...ids, selected].sort()
 
   const isSmall = (id: string) => /mini|nano/.test(id)
-  const groups: Array<[string, string[]]> = [
-    ['Full-sized models', allIds.filter((id) => !isSmall(id))],
-    ['Smaller models (faster & more affordable)', allIds.filter(isSmall)],
-  ]
+  const toOption = (id: string) => ({ value: id, label: id, sublabel: priceLabel(pricingMap[id]) })
+  return [
+    { label: 'Full-sized models', options: allIds.filter((id) => !isSmall(id)).map(toOption) },
+    {
+      label: 'Smaller models (faster & more affordable)',
+      options: allIds.filter(isSmall).map(toOption),
+    },
+  ].filter((group) => group.options.length)
+}
 
-  for (const [label, groupIds] of groups) {
-    if (!groupIds.length) continue
-    const optgroup = document.createElement('optgroup')
-    optgroup.label = label
-    for (const id of groupIds) {
-      const option = document.createElement('option')
-      option.value = id
-      option.textContent = modelLabel(id, pricingMap[id])
-      optgroup.appendChild(option)
-    }
-    select.appendChild(optgroup)
-  }
-
-  if (selected) select.value = selected
-  updateCostEstimate()
+function paintModels(ids: string[]): void {
+  modelIds = ids
+  modelDropdown.setGroups(modelGroups(ids))
 }
 
 function updateCostEstimate(): void {
-  const select = el<HTMLSelectElement>('model-selection')
-  const pricing = pricingMap[select.value]
+  const pricing = pricingMap[modelDropdown.getSelected()]
   let text = ''
   if (pricing) {
     const maxTokens = parseInt(el<HTMLSelectElement>('max-tokens').value, 10)
-    const estimate = estimateOutputCost(pricing, maxTokens, select.value)
+    const estimate = estimateOutputCost(pricing, maxTokens, modelDropdown.getSelected())
     text = `Output cost up to ~${formatCost(estimate)} per summary`
   }
   el('model-description').textContent = text
 }
 
-/** Once prices arrive, relabel the already-painted options in place. */
+/** Once prices arrive, repaint the groups in place (selection is preserved). */
 async function loadPrices(): Promise<void> {
   pricingMap = await loadPricing()
-  const select = el<HTMLSelectElement>('model-selection')
-  for (const option of Array.from(select.options)) {
-    option.textContent = modelLabel(option.value, pricingMap[option.value])
-  }
+  paintModels(modelIds)
   updateCostEstimate()
 }
 
@@ -102,8 +134,8 @@ async function loadModels(apiKey: string, selected: string, force = false): Prom
     force,
     onUpdate: (ids, fetching) => {
       if (seq !== modelLoadSeq) return // superseded by a newer load
-      const current = el<HTMLSelectElement>('model-selection').value
-      populateModelSelect(ids, current || selected)
+      if (!modelDropdown.getSelected() && selected) modelDropdown.setSelected(selected)
+      paintModels(ids)
       if (fetching) {
         el('model-description').textContent = 'Loading model list from OpenAI…'
       }
@@ -112,218 +144,68 @@ async function loadModels(apiKey: string, selected: string, force = false): Prom
   if (seq === modelLoadSeq) {
     updateCostEstimate()
     if (outcome === 'error') {
-      showStatus('Could not load the model list from OpenAI — using the fallback list.', 'error')
+      showToast('Could not load the model list — using the fallback list.', 'error')
     }
   }
   return outcome === 'live'
 }
 
-// ---- Language dropdown ----
+// ---- API key ----
 
-function populateLanguageDropdown(languages: Language[]): void {
-  const optionsContainer = el('language-options')
-  optionsContainer.replaceChildren()
-
-  for (const lang of languages) {
-    const option = document.createElement('div')
-    option.className = 'dropdown-option'
-    option.dataset.value = lang.name.toLowerCase()
-    option.textContent = `${lang.name} (${lang.nativeName})`
-
-    // Make option focusable and accessible
-    option.setAttribute('tabindex', '0')
-    option.setAttribute('role', 'option')
-
-    // Mark as selected if it matches the current selection
-    if (selectedLanguage && lang.name.toLowerCase() === selectedLanguage) {
-      option.classList.add('selected')
-      option.setAttribute('aria-selected', 'true')
-      el('selected-language').textContent = `${lang.name} (${lang.nativeName})`
-    } else {
-      option.setAttribute('aria-selected', 'false')
-    }
-
-    option.addEventListener('click', function (this: HTMLElement) {
-      selectLanguage(this)
-    })
-
-    optionsContainer.appendChild(option)
-  }
-
-  optionsContainer.setAttribute('role', 'listbox')
-  optionsContainer.setAttribute('aria-label', 'Languages')
+function currentKey(): string {
+  return el<HTMLInputElement>('openai-api-key').value.trim()
 }
 
-function selectLanguage(optionElement: HTMLElement): void {
-  selectedLanguage = optionElement.dataset.value ?? selectedLanguage
-
-  el('selected-language').textContent = optionElement.textContent
-
-  const options = el('language-options').querySelectorAll('.dropdown-option')
-  options.forEach((opt) => {
-    opt.classList.remove('selected')
-    opt.setAttribute('aria-selected', 'false')
+const persistKey = debounce((apiKey: string) => {
+  const keyChanged = apiKey !== settings.openaiApiKey
+  void persist({ openaiApiKey: apiKey }).then(() => {
+    // A different key can see a different model roster — refresh it
+    if (keyChanged && apiKey) void loadModels(apiKey, modelDropdown.getSelected(), true)
   })
-  optionElement.classList.add('selected')
-  optionElement.setAttribute('aria-selected', 'true')
+}, 600)
 
-  el('dropdown-menu').style.display = 'none'
-  el('selected-language').setAttribute('aria-expanded', 'false')
-}
-
-function filterLanguages(searchText: string): Language[] {
-  if (!searchText) {
-    return languagesList
-  }
-  const needle = searchText.toLowerCase()
-  return languagesList.filter(
-    (lang) =>
-      lang.name.toLowerCase().includes(needle) ||
-      lang.nativeName.toLowerCase().includes(needle) ||
-      lang.code.toLowerCase().includes(needle),
-  )
-}
-
-function setupDropdown(): void {
-  const dropdownSelected = el('selected-language')
-  const dropdownMenu = el('dropdown-menu')
-  const searchInput = el<HTMLInputElement>('language-search')
-  const optionsContainer = el('language-options')
-
-  // Make dropdown accessible
-  dropdownSelected.setAttribute('tabindex', '0')
-  dropdownSelected.setAttribute('role', 'combobox')
-  dropdownSelected.setAttribute('aria-expanded', 'false')
-  dropdownSelected.setAttribute('aria-controls', 'dropdown-menu')
-
-  function toggleDropdown(open?: boolean): void {
-    const isOpen = open !== undefined ? open : dropdownMenu.style.display !== 'block'
-
-    dropdownMenu.style.display = isOpen ? 'block' : 'none'
-    dropdownSelected.setAttribute('aria-expanded', isOpen ? 'true' : 'false')
-
-    if (isOpen) {
-      searchInput.focus()
-    }
-  }
-
-  dropdownSelected.addEventListener('click', () => toggleDropdown())
-
-  dropdownSelected.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
-      e.preventDefault()
-      toggleDropdown(true)
-    }
+async function testKey(): Promise<void> {
+  const button = el<HTMLButtonElement>('test-key')
+  button.disabled = true
+  // Capture the roster the check fetches so success doubles as a refresh.
+  let ids: string[] = []
+  const result = await verifyKey(currentKey(), async (key) => {
+    ids = await fetchAvailableModels(key)
+    return ids
   })
-
-  // Close dropdown when clicking outside
-  document.addEventListener('click', (e) => {
-    const target = e.target as Node
-    if (!dropdownSelected.contains(target) && !dropdownMenu.contains(target)) {
-      toggleDropdown(false)
-    }
-  })
-
-  searchInput.addEventListener('input', function (this: HTMLInputElement) {
-    populateLanguageDropdown(filterLanguages(this.value))
-  })
-
-  // Prevent dropdown from closing when clicking on search input
-  searchInput.addEventListener('click', (e) => e.stopPropagation())
-
-  searchInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      toggleDropdown(false)
-      dropdownSelected.focus()
-    } else if (e.key === 'ArrowDown') {
-      e.preventDefault()
-      const firstOption = optionsContainer.querySelector<HTMLElement>('.dropdown-option')
-      firstOption?.focus()
-    }
-  })
-
-  // Keyboard navigation between options
-  optionsContainer.addEventListener('keydown', (e) => {
-    const options = Array.from(optionsContainer.querySelectorAll<HTMLElement>('.dropdown-option'))
-    const active = document.activeElement as HTMLElement
-    const currentIndex = options.indexOf(active)
-
-    if (e.key === 'ArrowDown') {
-      e.preventDefault()
-      if (currentIndex < options.length - 1) {
-        options[currentIndex + 1]?.focus()
-      }
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault()
-      if (currentIndex > 0) {
-        options[currentIndex - 1]?.focus()
-      } else {
-        searchInput.focus()
-      }
-    } else if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault()
-      if (active.classList.contains('dropdown-option')) {
-        selectLanguage(active)
-      }
-    } else if (e.key === 'Escape') {
-      toggleDropdown(false)
-      dropdownSelected.focus()
-    }
-  })
-}
-
-// ---- Other controls ----
-
-function updateTemperatureValue(): void {
-  el('temperature-value').textContent = el<HTMLInputElement>('temperature-slider').value
-}
-
-function showStatus(message: string, kind: 'success' | 'error' = 'success'): void {
-  const status = el('status')
-  status.textContent = message
-  status.className = `status ${kind}`
-  setTimeout(() => {
-    status.textContent = ''
-    status.className = 'status'
-  }, 2000)
-}
-
-let savedApiKey = ''
-
-async function saveOptions(): Promise<void> {
-  const apiKey = el<HTMLInputElement>('openai-api-key').value.trim()
-  const keyChanged = apiKey !== savedApiKey
-
-  await saveSettings({
-    openaiApiKey: apiKey,
-    selectedModel: el<HTMLSelectElement>('model-selection').value,
-    summaryLanguage: selectedLanguage,
-    temperature: parseFloat(el<HTMLInputElement>('temperature-slider').value),
-    maxTokens: parseInt(el<HTMLSelectElement>('max-tokens').value, 10),
-    selectedPromptId: (await getSettings()).selectedPromptId,
-  })
-  savedApiKey = apiKey
-  showStatus('Settings saved.')
-
-  // A different key can see a different model roster — refresh it
-  if (keyChanged && apiKey) {
-    await loadModels(apiKey, el<HTMLSelectElement>('model-selection').value, true)
+  button.disabled = false
+  if (result.ok) {
+    showToast(`Key works — ${result.modelCount} models available.`)
+    await writeModelCache(ids, Date.now())
+    paintModels(ids)
+  } else {
+    showToast(result.message, 'error')
   }
 }
+
+// ---- Init ----
 
 async function restoreOptions(): Promise<void> {
-  const settings = await getSettings()
+  settings = await getSettings()
 
   el<HTMLInputElement>('openai-api-key').value = settings.openaiApiKey
-  savedApiKey = settings.openaiApiKey
-  selectedLanguage = settings.summaryLanguage
   el<HTMLInputElement>('temperature-slider').value = String(settings.temperature)
   el<HTMLSelectElement>('max-tokens').value = String(settings.maxTokens)
-  updateTemperatureValue()
+  updateTemperature()
 
-  // Settings are loaded before the dropdowns are populated, so the saved
+  // Selections are set before the dropdowns are populated, so the saved
   // language/model are highlighted correctly (no async race).
-  populateLanguageDropdown(languagesList)
+  languageDropdown.setGroups([
+    {
+      options: languagesList.map((lang) => ({
+        value: lang.name.toLowerCase(),
+        label: `${lang.name} (${lang.nativeName})`,
+        keywords: `${lang.nativeName} ${lang.code}`,
+      })),
+    },
+  ])
+  languageDropdown.setSelected(settings.summaryLanguage)
+  modelDropdown.setSelected(settings.selectedModel)
 
   // Prices load in parallel with the model list; whichever lands last wins
   // because both repaint labels from the shared pricingMap.
@@ -332,20 +214,50 @@ async function restoreOptions(): Promise<void> {
   await pricesReady
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  void restoreOptions().then(setupDropdown)
+function updateTemperature(): void {
+  const slider = el<HTMLInputElement>('temperature-slider')
+  el('temperature-value').textContent = slider.value
+  slider.style.setProperty('--mcs-range-fill', `${parseFloat(slider.value) * 100}%`)
+}
 
-  el('save-button').addEventListener('click', () => void saveOptions())
+document.addEventListener('DOMContentLoaded', () => {
+  el('title-icon').innerHTML = sparklesIcon(18, 'mcs-grad-popup')
+  el('key-reveal').innerHTML = EYE_ICON
+  el('model-dd').appendChild(modelDropdown.element)
+  el('language-dd').appendChild(languageDropdown.element)
+
+  void restoreOptions()
+
   el('open-options').addEventListener('click', () => chrome.runtime.openOptionsPage())
-  el<HTMLSelectElement>('model-selection').addEventListener('change', updateCostEstimate)
-  el<HTMLSelectElement>('max-tokens').addEventListener('change', updateCostEstimate)
-  el<HTMLInputElement>('temperature-slider').addEventListener('input', updateTemperatureValue)
+  el('test-key').addEventListener('click', () => void testKey())
+
+  el('openai-api-key').addEventListener('input', () => persistKey(currentKey()))
+
+  el('key-reveal').addEventListener('click', () => {
+    const input = el<HTMLInputElement>('openai-api-key')
+    const reveal = input.type === 'password'
+    input.type = reveal ? 'text' : 'password'
+    el('key-reveal').innerHTML = reveal ? EYE_OFF_ICON : EYE_ICON
+    el('key-reveal').title = reveal ? 'Hide key' : 'Show key'
+    el('key-reveal').setAttribute('aria-label', el('key-reveal').title)
+  })
+
+  el<HTMLSelectElement>('max-tokens').addEventListener('change', () => {
+    updateCostEstimate()
+    void persist({ maxTokens: parseInt(el<HTMLSelectElement>('max-tokens').value, 10) })
+  })
+
+  const slider = el<HTMLInputElement>('temperature-slider')
+  slider.addEventListener('input', updateTemperature)
+  slider.addEventListener('change', () =>
+    void persist({ temperature: parseFloat(slider.value) }),
+  )
+
   el('refresh-models').addEventListener('click', () => {
-    const apiKey = el<HTMLInputElement>('openai-api-key').value.trim()
-    const selected = el<HTMLSelectElement>('model-selection').value
-    void loadModels(apiKey, selected, true).then((live) => {
-      if (live) showStatus('Model list updated.')
-      else if (!apiKey) showStatus('Enter an API key first to load your models.', 'error')
+    const apiKey = currentKey()
+    void loadModels(apiKey, modelDropdown.getSelected(), true).then((live) => {
+      if (live) showToast('Model list updated.')
+      else if (!apiKey) showToast('Enter an API key first to load your models.', 'error')
     })
   })
 })
