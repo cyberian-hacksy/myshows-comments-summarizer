@@ -31,7 +31,6 @@ export interface SearchableDropdown {
   /** Programmatic selection — updates the UI without firing onSelect. */
   setSelected(value: string): void
   getSelected(): string
-  close(): void
 }
 
 export function createSearchableDropdown(config: SearchableDropdownConfig): SearchableDropdown {
@@ -253,9 +252,6 @@ export function createSearchableDropdown(config: SearchableDropdownConfig): Sear
     },
     getSelected() {
       return selected
-    },
-    close() {
-      setOpen(false)
     },
   }
 }

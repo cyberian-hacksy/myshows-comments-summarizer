@@ -1,3 +1,4 @@
+import { mergePrompts } from './prompts'
 import type { PromptDefinition, PromptOverride, Settings } from './types'
 import { DEFAULT_SETTINGS } from './types'
 
@@ -52,4 +53,22 @@ export async function savePromptState(state: PromptState): Promise<void> {
     customPrompts: state.customs,
     systemPrompt: state.systemPrompt,
   })
+}
+
+export interface ActivePrompts {
+  settings: Settings
+  /** null means "use DEFAULT_SYSTEM_PROMPT" */
+  systemPrompt: string | null
+  /** Built-ins with overrides applied, followed by custom prompts. */
+  prompts: PromptDefinition[]
+}
+
+/** Settings and the merged prompt list, loaded together. */
+export async function loadActivePrompts(): Promise<ActivePrompts> {
+  const [settings, promptState] = await Promise.all([getSettings(), getPromptState()])
+  return {
+    settings,
+    systemPrompt: promptState.systemPrompt,
+    prompts: mergePrompts(promptState.overrides, promptState.customs),
+  }
 }

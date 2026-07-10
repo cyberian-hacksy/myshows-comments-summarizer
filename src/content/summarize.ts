@@ -1,8 +1,8 @@
 import { requestSummary } from '../openai'
 import { computeCost, formatCost, loadPricing } from '../pricing'
-import { DEFAULT_SYSTEM_PROMPT, mergePrompts, renderPrompt } from '../prompts'
+import { DEFAULT_SYSTEM_PROMPT, renderPrompt } from '../prompts'
 import type { TokenUsage } from '../types'
-import { getPromptState, getSettings } from '../storage'
+import { loadActivePrompts } from '../storage'
 import { getPromptDisplayName } from './dom-utils'
 import { extractComments } from './extract-comments'
 
@@ -48,9 +48,7 @@ export async function handleSummarizeClick(): Promise<void> {
     return
   }
 
-  const settings = await getSettings()
-  const promptState = await getPromptState()
-  const prompts = mergePrompts(promptState.overrides, promptState.customs)
+  const { settings, systemPrompt, prompts } = await loadActivePrompts()
   const prompt =
     prompts.find((p) => p.id === settings.selectedPromptId) ??
     prompts.find((p) => p.id === 'default')!
@@ -100,7 +98,7 @@ export async function handleSummarizeClick(): Promise<void> {
     const { text, usage } = await requestSummary({
       apiKey: settings.openaiApiKey,
       model: settings.selectedModel,
-      system: promptState.systemPrompt ?? DEFAULT_SYSTEM_PROMPT,
+      system: systemPrompt ?? DEFAULT_SYSTEM_PROMPT,
       user: renderPrompt(prompt, comments, settings.summaryLanguage),
       temperature: settings.temperature,
       maxTokens: settings.maxTokens,

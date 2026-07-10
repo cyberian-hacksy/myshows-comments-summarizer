@@ -2,6 +2,7 @@ import { BUILTIN_PROMPTS, DEFAULT_SYSTEM_PROMPT, mergePrompts, NEW_PROMPT_TEMPLA
 import { getPromptState, savePromptState, type PromptState } from '../storage'
 import type { PromptDefinition } from '../types'
 import { confirmDialog, unsavedChangesDialog } from '../ui/confirm-dialog'
+import { el } from '../ui/dom'
 import { sparklesIcon } from '../ui/sparkles'
 import { showToast } from '../ui/toast'
 import { duplicateName, insertAtCursor, isDirty, templateWarning, type EditorFields } from './editor-logic'
@@ -11,10 +12,6 @@ let selectedId: string | null = null
 let activeId = 'default'
 /** Snapshot of the fields as last opened/saved; null while no prompt is open. */
 let savedFields: EditorFields | null = null
-
-function el<T extends HTMLElement>(id: string): T {
-  return document.getElementById(id) as T
-}
 
 function pristineBuiltin(id: string): PromptDefinition | undefined {
   return BUILTIN_PROMPTS.find((p) => p.id === id)

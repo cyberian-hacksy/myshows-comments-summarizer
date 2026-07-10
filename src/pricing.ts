@@ -2,6 +2,7 @@
 // bundled fallback. OpenAI's own API exposes no pricing, so prices come from
 // openrouter.ai, which lists OpenAI models at OpenAI's list prices.
 
+import { CACHE_TTL_MS } from './cache'
 import { isReasoningModel } from './openai'
 import type { TokenUsage } from './types'
 
@@ -65,8 +66,6 @@ export async function fetchPricing(): Promise<PricingMap> {
   return parseOpenRouterPricing(await response.json())
 }
 
-const CACHE_TTL_MS = 24 * 60 * 60 * 1000
-
 interface PricingCache {
   prices: PricingMap
   fetchedAt: number
@@ -105,10 +104,6 @@ export async function loadPricing(options: LoadPricingOptions = {}): Promise<Pri
 /** "$1.25", "$0.40", "$10" — dollars per 1M tokens as shown in the model list. */
 function perM(n: number): string {
   return `$${n.toFixed(2).replace(/\.00$/, '')}`
-}
-
-export function modelLabel(id: string, pricing?: ModelPricing): string {
-  return pricing ? `${id} — ${perM(pricing.input)}/${perM(pricing.output)}` : id
 }
 
 /** "$1.25 / $10" — input/output prices per 1M tokens, for dropdown sublabels. */

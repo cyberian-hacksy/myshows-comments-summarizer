@@ -1,5 +1,7 @@
 // Model list handling: live list from the OpenAI API, cached with fallbacks.
 
+import { CACHE_TTL_MS } from './cache'
+
 export const DEFAULT_MODELS = [
   'gpt-4o',
   'gpt-4o-mini',
@@ -11,8 +13,6 @@ export const DEFAULT_MODELS = [
   'gpt-5-nano',
   'o4-mini',
 ]
-
-const CACHE_TTL_MS = 24 * 60 * 60 * 1000
 
 export interface ModelCache {
   ids: string[]

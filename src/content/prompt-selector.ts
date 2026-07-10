@@ -1,5 +1,4 @@
-import { mergePrompts } from '../prompts'
-import { getPromptState, getSettings } from '../storage'
+import { loadActivePrompts } from '../storage'
 import { getPromptDisplayName } from './dom-utils'
 import { handleSummarizeClick } from './summarize'
 
@@ -28,8 +27,7 @@ export function setupPromptSelector(): void {
   // Rebuild dropdown options from the merged prompt list. Prompt names are
   // user-controlled, so build nodes with textContent — never innerHTML.
   async function populateOptions(): Promise<void> {
-    const [settings, promptState] = await Promise.all([getSettings(), getPromptState()])
-    const prompts = mergePrompts(promptState.overrides, promptState.customs)
+    const { settings, prompts } = await loadActivePrompts()
     const selectedId = settings.selectedPromptId
 
     optionsContainer!.replaceChildren()

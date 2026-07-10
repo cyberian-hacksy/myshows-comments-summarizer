@@ -5,7 +5,6 @@ import {
   FALLBACK_PRICING,
   formatCost,
   loadPricing,
-  modelLabel,
   parseOpenRouterPricing,
   priceLabel,
 } from '../src/pricing'
@@ -50,20 +49,6 @@ describe('parseOpenRouterPricing', () => {
   test('returns an empty map on unexpected shapes', () => {
     expect(parseOpenRouterPricing({})).toEqual({})
     expect(parseOpenRouterPricing(null)).toEqual({})
-  })
-})
-
-describe('modelLabel', () => {
-  test('appends input/output prices when known', () => {
-    expect(modelLabel('gpt-5', { input: 1.25, output: 10 })).toBe('gpt-5 — $1.25/$10')
-    expect(modelLabel('gpt-4o', { input: 2.5, output: 10 })).toBe('gpt-4o — $2.50/$10')
-    expect(modelLabel('gpt-4.1-mini', { input: 0.4, output: 1.6 })).toBe(
-      'gpt-4.1-mini — $0.40/$1.60',
-    )
-  })
-
-  test('returns the bare id when pricing is unknown', () => {
-    expect(modelLabel('gpt-6-preview', undefined)).toBe('gpt-6-preview')
   })
 })
 

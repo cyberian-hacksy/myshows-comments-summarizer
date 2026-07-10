@@ -6,6 +6,7 @@ import type { PricingMap } from '../pricing'
 import { getSettings, saveSettings } from '../storage'
 import type { Settings } from '../types'
 import { debounce } from '../ui/debounce'
+import { el } from '../ui/dom'
 import { createSearchableDropdown, type DropdownGroup } from '../ui/searchable-dropdown'
 import { sparklesIcon } from '../ui/sparkles'
 import { showToast } from '../ui/toast'
@@ -27,10 +28,6 @@ const languagesList: Language[] = Object.entries(
     nativeName: names[1] ?? names[0] ?? code,
   }))
   .sort((a, b) => a.name.localeCompare(b.name))
-
-function el<T extends HTMLElement>(id: string): T {
-  return document.getElementById(id) as T
-}
 
 // Static SVGs — no user content involved.
 const EYE_ICON = `

@@ -1,3 +1,4 @@
+import { BUILTIN_PROMPTS } from '../prompts'
 import type { PromptDefinition } from '../types'
 import { releaseOrRemove } from './button-manager'
 
@@ -22,6 +23,7 @@ export function hasShowCommentsButton(): boolean {
   return !!document.querySelector('.Episode-commentsShow')
 }
 
+// A stale/unknown id falls back to the default prompt's name.
 export function getPromptDisplayName(prompts: PromptDefinition[], promptId: string): string {
-  return prompts.find((p) => p.id === promptId)?.name ?? 'Summarize Comments'
+  return prompts.find((p) => p.id === promptId)?.name ?? BUILTIN_PROMPTS[0]!.name
 }
