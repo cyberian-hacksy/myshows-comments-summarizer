@@ -67,17 +67,9 @@ Do not repeat the same observation in more than one section.${SHARED_SUFFIX}`,
   },
 ]
 
-const MAX_COMMENT_LENGTH = 300
-
 export function formatComments(comments: Comment[]): string {
   return comments
-    .map((c, i) => {
-      const text =
-        c.text.length > MAX_COMMENT_LENGTH
-          ? c.text.slice(0, MAX_COMMENT_LENGTH) + '...'
-          : c.text
-      return `Comment ${i + 1}: ${text}\nRating: ${c.rating}`
-    })
+    .map((c, i) => `Comment ${i + 1}: ${c.text}\nRating: ${c.rating}`)
     .join('\n\n')
 }
 

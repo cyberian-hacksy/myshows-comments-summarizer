@@ -1,6 +1,6 @@
 {
   "name": "myshows-comments-summarizer",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "A Chrome extension that adds a button to myshows.me pages to summarize user comments using OpenAI's AI models.",
   "type": "module",
   "scripts": {

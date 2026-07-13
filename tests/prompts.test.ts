@@ -31,12 +31,11 @@ describe('renderPrompt', () => {
     expect(renderPrompt(prompt, comments, '')).toBe('english')
   })
 
-  test('truncates comments longer than 300 characters', () => {
-    const long: Comment[] = [{ text: 'x'.repeat(400), rating: '1' }]
+  test('includes long comments in full, untruncated', () => {
+    const long: Comment[] = [{ text: 'x'.repeat(400) + '😀', rating: '1' }]
     const prompt = { id: 'x', name: 'X', builtin: false, template: '{comments}' }
     const rendered = renderPrompt(prompt, long, 'english')
-    expect(rendered).toContain('x'.repeat(300) + '...')
-    expect(rendered).not.toContain('x'.repeat(301))
+    expect(rendered).toContain('x'.repeat(400) + '😀')
   })
 })
 
